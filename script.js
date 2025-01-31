@@ -233,10 +233,11 @@ class StoryManager {
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 20;
+    const bottomMargin = 30; // Increased bottom margin
     const textWidth = pageWidth - (2 * margin);
 
-    // Start with a smaller font size for better text fitting
-    pdf.setFontSize(10);
+    // Start with a larger base font size
+    pdf.setFontSize(12);
 
     for (let i = 0; i < story.storyHistory.length; i++) {
       if (i > 0) {
@@ -297,11 +298,11 @@ class StoryManager {
 
       const text = story.storyHistory[i];
       
-      // Calculate available height for text
-      const availableHeight = pageHeight - currentY - margin;
+      // Calculate available height for text, accounting for increased bottom margin
+      const availableHeight = pageHeight - currentY - bottomMargin;
       
       // Split text to find optimal font size
-      let fontSize = 10;
+      let fontSize = 12; // Start with larger font size
       let textLines;
       let textHeight;
       
@@ -313,7 +314,7 @@ class StoryManager {
         if (textHeight > availableHeight) {
           fontSize--;
         }
-      } while (textHeight > availableHeight && fontSize > 6); // Don't go smaller than 6pt
+      } while (textHeight > availableHeight && fontSize > 8); // Don't go smaller than 8pt
       
       // If text still doesn't fit, create new pages as needed
       if (textHeight > availableHeight) {
@@ -327,7 +328,7 @@ class StoryManager {
           }
           
           // Calculate how many lines can fit on current page
-          const linesPerPage = Math.floor(availableHeight / (fontSize * 0.3527777778));
+          const linesPerPage = Math.floor((pageHeight - currentY - bottomMargin) / (fontSize * 0.3527777778));
           const currentPageLines = remainingLines.slice(0, linesPerPage);
           remainingLines = remainingLines.slice(linesPerPage);
           
