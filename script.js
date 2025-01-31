@@ -179,6 +179,7 @@ class StoryManager {
     const margin = 20;
     const textWidth = pageWidth - (2 * margin);
 
+    // Process each page sequentially
     for (let i = 0; i < story.storyHistory.length; i++) {
       if (i > 0) {
         pdf.addPage();
@@ -193,7 +194,7 @@ class StoryManager {
           // Convert data URL to image for PDF
           await new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = "Anonymous";  // Add this line to handle CORS
+            img.crossOrigin = "Anonymous";  // Handle CORS
             img.onload = () => {
               try {
                 // Calculate image dimensions to fit page width while maintaining aspect ratio
@@ -201,12 +202,14 @@ class StoryManager {
                 const imgHeight = (img.height * imgWidth) / img.width;
                 
                 pdf.addImage(
-                  img,
-                  'JPEG',
+                  img.src,  // Use src directly
+                  'PNG',    // Changed to PNG format
                   margin,
                   margin,
                   imgWidth,
-                  imgHeight
+                  imgHeight,
+                  `image_${i}`, // Unique alias for each image
+                  'FAST'    // Fast compression
                 );
                 
                 // Add text below image
@@ -218,15 +221,19 @@ class StoryManager {
                 
                 resolve();
               } catch (e) {
+                console.error('Error adding image to PDF:', e);
                 reject(e);
               }
             };
-            img.onerror = reject;
+            img.onerror = (e) => {
+              console.error('Error loading image:', e);
+              reject(e);
+            };
             img.src = imageUrl;
           });
         } catch (error) {
-          console.error('Error adding image to PDF:', error);
-          // Continue with next page even if image fails
+          console.error('Error processing image for PDF:', error);
+          // If image fails, just add text
           const text = story.storyHistory[i];
           const splitText = pdf.splitTextToSize(text, textWidth);
           pdf.setFontSize(12);
@@ -242,7 +249,12 @@ class StoryManager {
     }
 
     // Save the PDF
-    pdf.save(`story_${this.currentStoryId}.pdf`);
+    try {
+      pdf.save(`story_${this.currentStoryId}.pdf`);
+    } catch (error) {
+      console.error('Error saving PDF:', error);
+      alert('Error creating PDF. Please try again.');
+    }
   }
 
   updatePDFButtonState() {
