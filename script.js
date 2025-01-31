@@ -12,7 +12,6 @@ class StoryManager {
     this.loadStories();
     this.setupEventListeners();
     this.showStoryList();
-    // Add home icon click handler
     document.getElementById('homeIcon').addEventListener('click', () => this.showStoryList());
     document.getElementById('pdfIcon').addEventListener('click', () => this.downloadPDF());
     this.updatePDFButtonState();
@@ -363,7 +362,7 @@ class StoryManager {
     }
   }
 
-  async toggleTTS() {
+  toggleTTS() {
     if (this.speaking) {
       this.speechSynthesis.cancel();
       this.speaking = false;
@@ -376,7 +375,7 @@ class StoryManager {
       const currentText = story.storyHistory[story.currentPage - 1];
       
       // Split text into segments based on quotes and non-quotes
-      const segments = currentText.split(/([""])/);
+      const segments = currentText.split(/(["""])/);
       this.speechQueue = [];
       
       let inQuote = false;
@@ -384,7 +383,7 @@ class StoryManager {
       let speakerGender = null;
       
       for (let i = 0; i < segments.length; i++) {
-        if (segments[i] === '"' || segments[i] === """) {
+        if (segments[i] === '"' || segments[i] === """ || segments[i] === """) {
           // If we have accumulated text, process it
           if (currentSegment.trim()) {
             if (inQuote) {
