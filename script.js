@@ -12,6 +12,7 @@ class StoryManager {
     this.loadStories();
     this.setupEventListeners();
     this.showStoryList();
+    // Add home icon click handler
     document.getElementById('homeIcon').addEventListener('click', () => this.showStoryList());
     document.getElementById('pdfIcon').addEventListener('click', () => this.downloadPDF());
     this.updatePDFButtonState();
@@ -362,55 +363,61 @@ class StoryManager {
     }
   }
 
-  toggleTTS() {
+  async toggleTTS() {
     if (this.speaking) {
       this.speechSynthesis.cancel();
       this.speaking = false;
       document.getElementById('ttsButton').textContent = 'Read Aloud';
       this.speechQueue = [];
+      this.currentSpeaker = null;
     } else {
       const story = this.stories.get(this.currentStoryId);
       if (!story) return;
 
       const currentText = story.storyHistory[story.currentPage - 1];
       
-      // Split text into segments based on quotes and non-quotes
-      const segments = currentText.split(/(["""])/);
-      this.speechQueue = [];
+      // Split text into segments (dialogue and narrative)
+      const segments = this.splitTextIntoSegments(currentText);
       
-      let inQuote = false;
-      let currentSegment = '';
-      let speakerGender = null;
-      
-      for (let i = 0; i < segments.length; i++) {
-        if (segments[i] === '"' || segments[i] === """ || segments[i] === """) {
-          // If we have accumulated text, process it
-          if (currentSegment.trim()) {
-            if (inQuote) {
-              // For quoted text, determine speaker's gender using surrounding context
-              const context = {
-                before: i > 2 ? segments.slice(i-2, i).join('') : '',
-                current: currentSegment,
-                after: i < segments.length - 2 ? segments.slice(i+1, i+3).join('') : ''
-              };
-              speakerGender = this.determineSpeakerGender(context);
-              this.addToSpeechQueue(currentSegment.trim(), speakerGender);
-            } else {
-              // For non-quoted text, use neutral voice
-              this.addToSpeechQueue(currentSegment.trim(), null);
+      // Process each segment
+      this.speechQueue = segments.map(segment => {
+        const utterance = new SpeechSynthesisUtterance(segment.text.trim());
+        
+        // Configure voice based on segment type
+        if (segment.type === 'dialogue') {
+          const dialogueContext = this.getDialogueContext(segment.text, segment.context);
+          const gender = this.determineSpeakerGender(dialogueContext);
+          
+          if (gender) {
+            const voices = this.speechSynthesis.getVoices();
+            const genderVoices = voices.filter(voice => {
+              const voiceName = voice.name.toLowerCase();
+              return gender === 'female' ? 
+                voiceName.includes('female') || voiceName.includes('woman') :
+                voiceName.includes('male') || voiceName.includes('man');
+            });
+            
+            if (genderVoices.length > 0) {
+              utterance.voice = genderVoices[0];
+              if (gender === 'female') {
+                utterance.pitch = 1.2;
+              } else {
+                utterance.pitch = 0.8;
+              }
             }
           }
-          inQuote = !inQuote;
-          currentSegment = '';
         } else {
-          currentSegment += segments[i];
+          // Reset to narrator voice for non-dialogue
+          utterance.pitch = 1.0;
+          const voices = this.speechSynthesis.getVoices();
+          const narratorVoice = voices.find(v => v.name.includes('Google US English'));
+          if (narratorVoice) {
+            utterance.voice = narratorVoice;
+          }
         }
-      }
-      
-      // Process any remaining text
-      if (currentSegment.trim()) {
-        this.addToSpeechQueue(currentSegment.trim(), null);
-      }
+        
+        return utterance;
+      });
 
       this.speaking = true;
       document.getElementById('ttsButton').textContent = 'Stop Reading';
@@ -418,47 +425,54 @@ class StoryManager {
     }
   }
 
-  addToSpeechQueue(text, gender) {
-    // Split the text into sentences
-    const sentences = text.match(/[^.!?\n]+[.!?\n]+/g) || [text];
-    
-    sentences.forEach(sentence => {
-      const utterance = new SpeechSynthesisUtterance(sentence.trim());
-      
-      if (gender) {
-        // Get available voices
-        const voices = this.speechSynthesis.getVoices();
-        
-        // Filter and select appropriate voice based on gender
-        const genderVoices = voices.filter(voice => {
-          const voiceName = voice.name.toLowerCase();
-          return gender === 'female' ? 
-            voiceName.includes('female') || voiceName.includes('woman') :
-            voiceName.includes('male') || voiceName.includes('man');
+  splitTextIntoSegments(text) {
+    const segments = [];
+    let currentIndex = 0;
+    let dialogueRegex = /"[^"]+"/g;
+    let match;
+
+    while ((match = dialogueRegex.exec(text)) !== null) {
+      // Add narrative text before dialogue if exists
+      if (match.index > currentIndex) {
+        segments.push({
+          type: 'narrative',
+          text: text.slice(currentIndex, match.index),
+          context: text
         });
-        
-        if (genderVoices.length > 0) {
-          utterance.voice = genderVoices[0];
-          if (gender === 'female') {
-            utterance.pitch = 1.2;
-          } else {
-            utterance.pitch = 0.8;
-          }
-        }
       }
-      
-      this.speechQueue.push(utterance);
-    });
+
+      // Add dialogue
+      segments.push({
+        type: 'dialogue',
+        text: match[0],
+        context: {
+          before: text.slice(Math.max(0, match.index - 100), match.index),
+          current: match[0],
+          after: text.slice(match.index + match[0].length, Math.min(text.length, match.index + match[0].length + 100))
+        }
+      });
+
+      currentIndex = match.index + match[0].length;
+    }
+
+    // Add remaining narrative text if exists
+    if (currentIndex < text.length) {
+      segments.push({
+        type: 'narrative',
+        text: text.slice(currentIndex),
+        context: text
+      });
+    }
+
+    return segments;
   }
 
-  getDialogueContext(sentence, sentences) {
-    const currentIndex = sentences.indexOf(sentence);
-    const context = {
-      before: currentIndex > 0 ? sentences[currentIndex - 1] : '',
-      current: sentence,
-      after: currentIndex < sentences.length - 1 ? sentences[currentIndex + 1] : ''
+  getDialogueContext(dialogueText, context) {
+    return {
+      before: context.before,
+      current: dialogueText,
+      after: context.after
     };
-    return context;
   }
 
   determineSpeakerGender(context) {
