@@ -3,6 +3,7 @@ class StoryGenerator {
     this.currentPage = 1;
     this.storyData = null;
     this.storyHistory = [];
+    this.loadFromStorage();
     this.setupEventListeners();
   }
 
@@ -11,6 +12,41 @@ class StoryGenerator {
     document.getElementById('prevPage').addEventListener('click', () => this.navigatePage('prev'));
     document.getElementById('nextPage').addEventListener('click', () => this.navigatePage('next'));
     document.getElementById('newStory').addEventListener('click', () => this.resetForm());
+  }
+
+  loadFromStorage() {
+    try {
+      const savedState = localStorage.getItem('storyState');
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        this.currentPage = state.currentPage;
+        this.storyData = state.storyData;
+        this.storyHistory = state.storyHistory;
+
+        // If we have saved data, show the story container and hide the form
+        if (this.storyData) {
+          document.getElementById('storyForm').style.display = 'none';
+          document.getElementById('storyContainer').classList.remove('hidden');
+          this.displayCurrentPage();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading from storage:', error);
+      this.resetForm();
+    }
+  }
+
+  saveToStorage() {
+    try {
+      const state = {
+        currentPage: this.currentPage,
+        storyData: this.storyData,
+        storyHistory: this.storyHistory
+      };
+      localStorage.setItem('storyState', JSON.stringify(state));
+    } catch (error) {
+      console.error('Error saving to storage:', error);
+    }
   }
 
   async generateStory() {
@@ -23,6 +59,7 @@ class StoryGenerator {
     this.storyData = formData;
     this.currentPage = 1;
     this.storyHistory = [];
+    this.saveToStorage();
     
     // Show story container and hide form
     document.getElementById('storyForm').style.display = 'none';
@@ -32,6 +69,12 @@ class StoryGenerator {
   }
 
   async generatePage() {
+    // If we already have this page in history, just display it
+    if (this.storyHistory[this.currentPage - 1]) {
+      this.displayCurrentPage();
+      return;
+    }
+
     const loadingText = 'Generating your story...';
     document.getElementById('storyContent').textContent = loadingText;
 
@@ -66,32 +109,42 @@ class StoryGenerator {
       const data = await response.json();
       
       // Store the current page in history
-      this.storyHistory.push(data.content);
+      this.storyHistory[this.currentPage - 1] = data.content;
+      this.saveToStorage();
       
-      // Update the story display
-      document.getElementById('storyContent').innerHTML = data.content;
-      document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
-      
-      // Update navigation buttons
-      document.getElementById('prevPage').disabled = this.currentPage === 1;
-      document.getElementById('nextPage').disabled = !data.hasMoreContent;
+      this.displayCurrentPage(data.hasMoreContent);
     } catch (error) {
       console.error('Error generating story:', error);
       document.getElementById('storyContent').textContent = 'An error occurred while generating the story. Please try again.';
     }
   }
 
+  displayCurrentPage(hasMoreContent = true) {
+    const currentContent = this.storyHistory[this.currentPage - 1];
+    document.getElementById('storyContent').innerHTML = currentContent;
+    document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
+    
+    // Update navigation buttons
+    document.getElementById('prevPage').disabled = this.currentPage === 1;
+    document.getElementById('nextPage').disabled = !hasMoreContent;
+  }
+
   async navigatePage(direction) {
     if (direction === 'prev' && this.currentPage > 1) {
       this.currentPage--;
+      this.saveToStorage();
+      this.displayCurrentPage();
     } else if (direction === 'next') {
       this.currentPage++;
+      this.saveToStorage();
+      await this.generatePage();
     }
-    
-    await this.generatePage();
   }
 
   resetForm() {
+    // Clear storage
+    localStorage.removeItem('storyState');
+    
     // Reset form and show it again
     document.getElementById('storyForm').reset();
     document.getElementById('storyForm').style.display = 'block';
