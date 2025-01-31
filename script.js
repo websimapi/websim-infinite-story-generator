@@ -158,6 +158,7 @@ class StoryGenerator {
     this.currentPage = 1;
     this.storyData = null;
     this.storyHistory = [];
+    this.pageImages = new Map(); // Store generated images
     this.setupEventListeners();
   }
 
@@ -257,6 +258,9 @@ class StoryGenerator {
       this.storyHistory[this.currentPage - 1] = data.content;
       this.saveToStorage();
       
+      // Create and set up the image for this page
+      await this.setupPageImage(this.currentPage - 1, data.content);
+      
       this.displayCurrentPage(data.hasMoreContent);
     } catch (error) {
       console.error('Error generating story:', error);
@@ -264,9 +268,55 @@ class StoryGenerator {
     }
   }
 
+  async setupPageImage(pageIndex, content) {
+    const imgId = `page-image-${pageIndex}`;
+    let imgElement = document.getElementById(imgId);
+    
+    if (!imgElement) {
+      imgElement = document.createElement('img');
+      imgElement.id = imgId;
+      imgElement.className = 'page-image hidden';
+      imgElement.alt = content;
+      document.getElementById('storyContent').appendChild(imgElement);
+    }
+
+    // Store reference to image
+    this.pageImages.set(pageIndex, imgElement);
+
+    // Set up load event listener before setting src
+    await new Promise((resolve) => {
+      const originalSrc = content;
+      
+      imgElement.onload = () => {
+        if (imgElement.src !== originalSrc) {
+          imgElement.classList.remove('hidden');
+          resolve();
+        }
+      };
+
+      imgElement.src = content;
+    });
+  }
+
   displayCurrentPage(hasMoreContent = true) {
     const currentContent = this.storyHistory[this.currentPage - 1];
-    document.getElementById('storyContent').innerHTML = currentContent;
+    const contentElement = document.getElementById('storyContent');
+    
+    // Clear existing content
+    contentElement.innerHTML = '';
+    
+    // Add text content
+    const textDiv = document.createElement('div');
+    textDiv.className = 'story-text';
+    textDiv.textContent = currentContent;
+    contentElement.appendChild(textDiv);
+
+    // If we have an image for this page, add it
+    const pageImage = this.pageImages.get(this.currentPage - 1);
+    if (pageImage) {
+      contentElement.appendChild(pageImage);
+    }
+
     document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
     
     // Update navigation buttons
