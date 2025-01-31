@@ -161,7 +161,6 @@ class StoryManager {
     const story = this.stories.get(this.currentStoryId);
     if (!story) return;
 
-    // Ensure jsPDF is properly loaded
     if (typeof window.jspdf === 'undefined') {
       console.error('jsPDF library not loaded');
       return;
@@ -188,49 +187,42 @@ class StoryManager {
       const cacheKey = `${this.currentStoryId}_page_${i + 1}`;
       const imageUrl = this.storyGenerator?.imageCache.get(cacheKey);
 
+      let currentY = margin;
+
       if (imageUrl) {
         try {
-          // Create canvas and draw image
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Convert data URL to image for PDF
           await new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = "Anonymous";  // Handle CORS
+            img.crossOrigin = "Anonymous";
             img.onload = () => {
               try {
-                // Set canvas size to match image aspect ratio
                 const imgWidth = pageWidth - (2 * margin);
                 const imgHeight = (img.height * imgWidth) / img.width;
+                
+                // Ensure image doesn't overflow page
+                const maxImgHeight = pageHeight - (margin * 3); // Leave room for text
+                const finalImgHeight = Math.min(imgHeight, maxImgHeight);
                 
                 canvas.width = img.width;
                 canvas.height = img.height;
                 
-                // Draw image to canvas
                 ctx.drawImage(img, 0, 0, img.width, img.height);
                 
-                // Get canvas data URL
                 const canvasDataUrl = canvas.toDataURL('image/jpeg', 1.0);
                 
-                // Add image to PDF
                 pdf.addImage(
                   canvasDataUrl,
                   'JPEG',
                   margin,
-                  margin,
+                  currentY,
                   imgWidth,
-                  imgHeight
+                  finalImgHeight
                 );
                 
-                // Add text below image
-                const textY = margin + imgHeight + 10;
-                const text = story.storyHistory[i];
-                const splitText = pdf.splitTextToSize(text, textWidth);
-                pdf.setFontSize(12);
-                pdf.text(splitText, margin, textY);
-                
-                // Clean up
+                currentY += finalImgHeight + 10;
                 canvas.remove();
                 resolve();
               } catch (e) {
@@ -242,22 +234,30 @@ class StoryManager {
           });
         } catch (error) {
           console.error('Error adding image to PDF:', error);
-          // Continue with next page even if image fails
-          const text = story.storyHistory[i];
-          const splitText = pdf.splitTextToSize(text, textWidth);
-          pdf.setFontSize(12);
-          pdf.text(splitText, margin, margin);
         }
-      } else {
-        // If no image, just add text
-        const text = story.storyHistory[i];
-        const splitText = pdf.splitTextToSize(text, textWidth);
-        pdf.setFontSize(12);
-        pdf.text(splitText, margin, margin);
       }
+
+      // Add text with proper word wrapping
+      const text = story.storyHistory[i];
+      pdf.setFontSize(12);
+      
+      // Calculate available height for text
+      const availableHeight = pageHeight - currentY - margin;
+      
+      // Split text to fit width
+      const splitText = pdf.splitTextToSize(text, textWidth);
+      
+      // Calculate if text needs a new page
+      const textHeight = splitText.length * 5; // Approximate height per line
+      
+      if (textHeight > availableHeight) {
+        pdf.addPage();
+        currentY = margin;
+      }
+      
+      pdf.text(splitText, margin, currentY);
     }
 
-    // Save the PDF
     pdf.save(`story_${this.currentStoryId}.pdf`);
   }
 
