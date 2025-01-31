@@ -235,6 +235,7 @@ class StoryManager {
     const margin = 20;
     const textWidth = pageWidth - (2 * margin);
 
+    // Start with a smaller font size for better text fitting
     pdf.setFontSize(10);
 
     for (let i = 0; i < story.storyHistory.length; i++) {
@@ -296,18 +297,47 @@ class StoryManager {
 
       const text = story.storyHistory[i];
       
+      // Calculate available height for text
       const availableHeight = pageHeight - currentY - margin;
       
-      const splitText = pdf.splitTextToSize(text, textWidth);
+      // Split text to find optimal font size
+      let fontSize = 10;
+      let textLines;
+      let textHeight;
       
-      const textHeight = (splitText.length * 3.5); 
+      do {
+        pdf.setFontSize(fontSize);
+        textLines = pdf.splitTextToSize(text, textWidth);
+        textHeight = (textLines.length * fontSize * 0.3527777778); // Convert pt to mm
+        
+        if (textHeight > availableHeight) {
+          fontSize--;
+        }
+      } while (textHeight > availableHeight && fontSize > 6); // Don't go smaller than 6pt
       
+      // If text still doesn't fit, create new pages as needed
       if (textHeight > availableHeight) {
-        pdf.addPage();
-        currentY = margin;
+        let remainingLines = [...textLines];
+        let currentPage = 0;
+        
+        while (remainingLines.length > 0) {
+          if (currentPage > 0) {
+            pdf.addPage();
+            currentY = margin;
+          }
+          
+          // Calculate how many lines can fit on current page
+          const linesPerPage = Math.floor(availableHeight / (fontSize * 0.3527777778));
+          const currentPageLines = remainingLines.slice(0, linesPerPage);
+          remainingLines = remainingLines.slice(linesPerPage);
+          
+          pdf.text(currentPageLines, margin, currentY);
+          currentPage++;
+        }
+      } else {
+        // All text fits on one page
+        pdf.text(textLines, margin, currentY);
       }
-      
-      pdf.text(splitText, margin, currentY);
     }
 
     pdf.save(`story_${this.currentStoryId}.pdf`);
