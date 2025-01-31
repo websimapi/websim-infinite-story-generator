@@ -375,16 +375,16 @@ class StoryManager {
 
       const currentText = story.storyHistory[story.currentPage - 1];
       
-      // Split text into sentences
-      const sentences = currentText.match(/[^.!?\n]+[.!?\n]+/g) || [currentText];
+      // Split text while preserving quotes
+      const segments = currentText.match(/("[^"]+"|[^"]+)/g) || [currentText];
       
-      // Process each sentence
-      this.speechQueue = sentences.map(sentence => {
-        const utterance = new SpeechSynthesisUtterance(sentence.trim());
+      // Process each segment
+      this.speechQueue = segments.map(segment => {
+        const utterance = new SpeechSynthesisUtterance(segment.trim());
         
-        // Check for dialogue and determine speaker gender
-        if (sentence.includes('"')) {
-          const dialogueContext = this.getDialogueContext(sentence, sentences);
+        // Check if this is a quoted speech
+        if (segment.startsWith('"') && segment.endsWith('"')) {
+          const dialogueContext = this.getDialogueContext(segment, currentText);
           const gender = this.determineSpeakerGender(dialogueContext);
           
           if (gender) {
@@ -401,11 +401,7 @@ class StoryManager {
             
             if (genderVoices.length > 0) {
               utterance.voice = genderVoices[0];
-              if (gender === 'female') {
-                utterance.pitch = 1.2;
-              } else {
-                utterance.pitch = 0.8;
-              }
+              utterance.pitch = gender === 'female' ? 1.2 : 0.8;
             }
           }
         }
@@ -419,12 +415,18 @@ class StoryManager {
     }
   }
 
-  getDialogueContext(sentence, sentences) {
-    const currentIndex = sentences.indexOf(sentence);
+  getDialogueContext(dialogueSegment, fullText) {
+    // Get the text before and after the dialogue
+    const dialogueIndex = fullText.indexOf(dialogueSegment);
+    const contextWindow = 100; // Look at 100 characters before and after
+    
     const context = {
-      before: currentIndex > 0 ? sentences[currentIndex - 1] : '',
-      current: sentence,
-      after: currentIndex < sentences.length - 1 ? sentences[currentIndex + 1] : ''
+      before: fullText.substring(Math.max(0, dialogueIndex - contextWindow), dialogueIndex),
+      current: dialogueSegment,
+      after: fullText.substring(
+        dialogueIndex + dialogueSegment.length, 
+        Math.min(fullText.length, dialogueIndex + dialogueSegment.length + contextWindow)
+      )
     };
     return context;
   }
@@ -435,15 +437,26 @@ class StoryManager {
       male: ['he', 'him', 'himself', 'man', 'boy', 'father', 'brother', 'son', 'uncle', 'gentleman']
     };
 
-    const contextText = context.before + ' ' + context.current + ' ' + context.after;
+    const contextText = context.before + ' ' + context.after;
     const words = contextText.toLowerCase().split(/\W+/);
     
     let femaleScore = 0;
     let maleScore = 0;
 
+    // Check for immediate gender indicators in nearby context
     words.forEach(word => {
       if (genderIndicators.female.includes(word)) femaleScore++;
       if (genderIndicators.male.includes(word)) maleScore++;
+    });
+
+    // Add weighting for proximity to dialogue
+    const nearbyWords = contextText.split(/\W+/).slice(-3).concat(
+      contextText.split(/\W+/).slice(0, 3)
+    );
+    
+    nearbyWords.forEach(word => {
+      if (genderIndicators.female.includes(word.toLowerCase())) femaleScore += 2;
+      if (genderIndicators.male.includes(word.toLowerCase())) maleScore += 2;
     });
 
     if (femaleScore > maleScore) return 'female';
