@@ -419,6 +419,53 @@ class StoryManager {
         return utterance;
       });
 
+      // Break text into smaller chunks
+      const minSentenceLength = 50; // Minimum length to consider a sentence complete
+      const sentences = this.speechQueue.reduce((acc, utterance) => {
+        const text = utterance.text;
+        let currentSentence = '';
+        let sentences = [];
+        
+        // Split by common sentence endings while preserving quotes
+        const parts = text.match(/[^.!?]+[.!?]+|[^.!?]+/g) || [text];
+        
+        parts.forEach(part => {
+          currentSentence += part;
+          
+          // Check if we have a complete sentence
+          if (
+            (currentSentence.length >= minSentenceLength && /[.!?]/.test(currentSentence)) ||
+            (/[.!?]"/.test(currentSentence)) // End of quoted speech
+          ) {
+            sentences.push({
+              text: currentSentence.trim(),
+              voice: utterance.voice,
+              pitch: utterance.pitch
+            });
+            currentSentence = '';
+          }
+        });
+        
+        // Add any remaining text
+        if (currentSentence.trim()) {
+          sentences.push({
+            text: currentSentence.trim(),
+            voice: utterance.voice,
+            pitch: utterance.pitch
+          });
+        }
+        
+        return [...acc, ...sentences];
+      }, []);
+      
+      // Create new utterances for each sentence
+      this.speechQueue = sentences.map(sentence => {
+        const utterance = new SpeechSynthesisUtterance(sentence.text);
+        utterance.voice = sentence.voice;
+        utterance.pitch = sentence.pitch;
+        return utterance;
+      });
+
       this.speaking = true;
       document.getElementById('ttsButton').textContent = 'Stop Reading';
       this.speakNextInQueue();
