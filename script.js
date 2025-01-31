@@ -1,9 +1,161 @@
-class StoryGenerator {
+class StoryManager {
   constructor() {
+    this.stories = new Map();
+    this.currentStoryId = null;
+    this.storyGenerator = null;
+    this.loadStories();
+    this.setupEventListeners();
+    this.showStoryList();
+  }
+
+  setupEventListeners() {
+    document.getElementById('createNewStory').addEventListener('click', () => this.startNewStory());
+  }
+
+  loadStories() {
+    try {
+      const savedStories = localStorage.getItem('stories');
+      if (savedStories) {
+        const storiesArray = JSON.parse(savedStories);
+        storiesArray.forEach(story => {
+          this.stories.set(story.id, story);
+        });
+      }
+    } catch (error) {
+      console.error('Error loading stories:', error);
+    }
+  }
+
+  saveStories() {
+    try {
+      const storiesArray = Array.from(this.stories.values());
+      localStorage.setItem('stories', JSON.stringify(storiesArray));
+    } catch (error) {
+      console.error('Error saving stories:', error);
+    }
+  }
+
+  showStoryList() {
+    document.getElementById('storyList').classList.remove('hidden');
+    document.getElementById('storyForm').classList.add('hidden');
+    document.getElementById('storyContainer').classList.add('hidden');
+    
+    this.renderStoryList();
+  }
+
+  renderStoryList() {
+    const savedStoriesEl = document.getElementById('savedStories');
+    savedStoriesEl.innerHTML = '';
+
+    if (this.stories.size === 0) {
+      savedStoriesEl.innerHTML = `
+        <div class="no-stories">
+          <p>You haven't created any stories yet.</p>
+        </div>
+      `;
+      return;
+    }
+
+    this.stories.forEach((story, id) => {
+      const storyCard = document.createElement('div');
+      storyCard.className = 'story-card';
+      storyCard.innerHTML = `
+        <h3>${story.storyData.storyType} Story</h3>
+        <p>Genre: ${story.storyData.storyType} | Tone: ${story.storyData.narrativeTone}</p>
+        <p>Pages: ${story.storyHistory.length}</p>
+        <div class="story-card-actions">
+          <button class="story-card-btn continue-btn" data-id="${id}">Continue</button>
+          <button class="story-card-btn view-details-btn" data-id="${id}">View Details</button>
+          <button class="story-card-btn delete-btn" data-id="${id}">Delete</button>
+        </div>
+      `;
+
+      storyCard.querySelector('.continue-btn').addEventListener('click', () => this.continueStory(id));
+      storyCard.querySelector('.view-details-btn').addEventListener('click', () => this.viewStoryDetails(id));
+      storyCard.querySelector('.delete-btn').addEventListener('click', () => this.deleteStory(id));
+
+      savedStoriesEl.appendChild(storyCard);
+    });
+  }
+
+  startNewStory() {
+    this.currentStoryId = null;
+    document.getElementById('storyList').classList.add('hidden');
+    document.getElementById('storyForm').classList.remove('hidden');
+    
+    if (!this.storyGenerator) {
+      this.storyGenerator = new StoryGenerator(this);
+    } else {
+      this.storyGenerator.resetForm();
+    }
+  }
+
+  continueStory(id) {
+    const story = this.stories.get(id);
+    if (!story) return;
+
+    this.currentStoryId = id;
+    if (!this.storyGenerator) {
+      this.storyGenerator = new StoryGenerator(this);
+    }
+    
+    this.storyGenerator.loadStory(story);
+    document.getElementById('storyList').classList.add('hidden');
+  }
+
+  viewStoryDetails(id) {
+    const story = this.stories.get(id);
+    if (!story) return;
+
+    // Create a modal to display story details
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Story Details</h2>
+        <div class="story-details">
+          <p><strong>Type:</strong> ${story.storyData.storyType}</p>
+          <p><strong>Tone:</strong> ${story.storyData.narrativeTone}</p>
+          <p><strong>Length:</strong> ${story.storyData.storyLength}</p>
+          <p><strong>POV:</strong> ${story.storyData.pov}</p>
+          <p><strong>Structure:</strong> ${story.storyData.structure}</p>
+          <p><strong>Target Age:</strong> ${story.storyData.targetAge}</p>
+        </div>
+        <button class="modal-close">Close</button>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.querySelector('.modal-close').addEventListener('click', () => modal.remove());
+  }
+
+  deleteStory(id) {
+    if (confirm('Are you sure you want to delete this story?')) {
+      this.stories.delete(id);
+      this.saveStories();
+      this.renderStoryList();
+    }
+  }
+
+  saveStory(storyData, currentPage, storyHistory) {
+    const id = this.currentStoryId || Date.now().toString();
+    this.stories.set(id, {
+      id,
+      storyData,
+      currentPage,
+      storyHistory
+    });
+    this.currentStoryId = id;
+    this.saveStories();
+  }
+}
+
+class StoryGenerator {
+  constructor(storyManager) {
+    this.storyManager = storyManager;
     this.currentPage = 1;
     this.storyData = null;
     this.storyHistory = [];
-    this.loadFromStorage();
     this.setupEventListeners();
   }
 
@@ -37,16 +189,7 @@ class StoryGenerator {
   }
 
   saveToStorage() {
-    try {
-      const state = {
-        currentPage: this.currentPage,
-        storyData: this.storyData,
-        storyHistory: this.storyHistory
-      };
-      localStorage.setItem('storyState', JSON.stringify(state));
-    } catch (error) {
-      console.error('Error saving to storage:', error);
-    }
+    this.storyManager.saveStory(this.storyData, this.currentPage, this.storyHistory);
   }
 
   async generateStory() {
@@ -142,15 +285,10 @@ class StoryGenerator {
   }
 
   resetForm() {
-    // Clear storage
-    localStorage.removeItem('storyState');
-    
-    // Reset form and show it again
     document.getElementById('storyForm').reset();
     document.getElementById('storyForm').style.display = 'block';
     document.getElementById('storyContainer').classList.add('hidden');
     
-    // Reset state
     this.currentPage = 1;
     this.storyData = null;
     this.storyHistory = [];
@@ -174,7 +312,17 @@ class StoryGenerator {
     const requiredFields = ['storyType', 'narrativeTone', 'storyLength', 'pov', 'structure', 'targetAge'];
     return requiredFields.every(field => formData[field] && formData[field].length > 0);
   }
+
+  loadStory(story) {
+    this.currentPage = story.currentPage;
+    this.storyData = story.storyData;
+    this.storyHistory = story.storyHistory;
+
+    document.getElementById('storyForm').style.display = 'none';
+    document.getElementById('storyContainer').classList.remove('hidden');
+    this.displayCurrentPage();
+  }
 }
 
-// Initialize the story generator
-const storyGenerator = new StoryGenerator();
+// Initialize the story manager
+const storyManager = new StoryManager();
