@@ -7,6 +7,8 @@ class StoryManager {
     this.storyGenerator = null;
     this.speaking = false;
     this.speechSynthesis = window.speechSynthesis;
+    this.speechQueue = [];
+    this.currentSpeaker = null;
     this.loadStories();
     this.setupEventListeners();
     this.showStoryList();
@@ -361,28 +363,118 @@ class StoryManager {
     }
   }
 
-  toggleTTS() {
+  async toggleTTS() {
     if (this.speaking) {
       this.speechSynthesis.cancel();
       this.speaking = false;
       document.getElementById('ttsButton').textContent = 'Read Aloud';
+      this.speechQueue = [];
     } else {
       const story = this.stories.get(this.currentStoryId);
       if (!story) return;
 
       const currentText = story.storyHistory[story.currentPage - 1];
-      const utterance = new SpeechSynthesisUtterance(currentText);
       
-      utterance.onend = () => {
-        this.speaking = false;
-        document.getElementById('ttsButton').textContent = 'Read Aloud';
-      };
+      // Split text into sentences
+      const sentences = currentText.match(/[^.!?\n]+[.!?\n]+/g) || [currentText];
+      
+      // Process each sentence
+      this.speechQueue = sentences.map(sentence => {
+        const utterance = new SpeechSynthesisUtterance(sentence.trim());
+        
+        // Check for dialogue and determine speaker gender
+        if (sentence.includes('"')) {
+          const dialogueContext = this.getDialogueContext(sentence, sentences);
+          const gender = this.determineSpeakerGender(dialogueContext);
+          
+          if (gender) {
+            // Get available voices
+            const voices = this.speechSynthesis.getVoices();
+            
+            // Filter and select appropriate voice based on gender
+            const genderVoices = voices.filter(voice => {
+              const voiceName = voice.name.toLowerCase();
+              return gender === 'female' ? 
+                voiceName.includes('female') || voiceName.includes('woman') :
+                voiceName.includes('male') || voiceName.includes('man');
+            });
+            
+            if (genderVoices.length > 0) {
+              utterance.voice = genderVoices[0];
+              if (gender === 'female') {
+                utterance.pitch = 1.2;
+              } else {
+                utterance.pitch = 0.8;
+              }
+            }
+          }
+        }
+        
+        return utterance;
+      });
 
       this.speaking = true;
       document.getElementById('ttsButton').textContent = 'Stop Reading';
-      this.speechSynthesis.speak(utterance);
+      this.speakNextInQueue();
     }
   }
+
+  getDialogueContext(sentence, sentences) {
+    const currentIndex = sentences.indexOf(sentence);
+    const context = {
+      before: currentIndex > 0 ? sentences[currentIndex - 1] : '',
+      current: sentence,
+      after: currentIndex < sentences.length - 1 ? sentences[currentIndex + 1] : ''
+    };
+    return context;
+  }
+
+  determineSpeakerGender(context) {
+    const genderIndicators = {
+      female: ['she', 'her', 'herself', 'woman', 'girl', 'mother', 'sister', 'daughter', 'aunt', 'lady'],
+      male: ['he', 'him', 'himself', 'man', 'boy', 'father', 'brother', 'son', 'uncle', 'gentleman']
+    };
+
+    const contextText = context.before + ' ' + context.current + ' ' + context.after;
+    const words = contextText.toLowerCase().split(/\W+/);
+    
+    let femaleScore = 0;
+    let maleScore = 0;
+
+    words.forEach(word => {
+      if (genderIndicators.female.includes(word)) femaleScore++;
+      if (genderIndicators.male.includes(word)) maleScore++;
+    });
+
+    if (femaleScore > maleScore) return 'female';
+    if (maleScore > femaleScore) return 'male';
+    return null;
+  }
+
+  speakNextInQueue() {
+    if (!this.speaking || this.speechQueue.length === 0) {
+      this.speaking = false;
+      document.getElementById('ttsButton').textContent = 'Read Aloud';
+      return;
+    }
+
+    const utterance = this.speechQueue.shift();
+    utterance.onend = () => {
+      if (this.speaking) {
+        this.speakNextInQueue();
+      }
+    };
+
+    try {
+      this.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error('Error speaking:', error);
+      this.speaking = false;
+      document.getElementById('ttsButton').textContent = 'Read Aloud';
+    }
+  }
+
+  // ...rest of the class methods...
 }
 
 class StoryGenerator {
