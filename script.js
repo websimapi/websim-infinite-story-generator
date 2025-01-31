@@ -206,7 +206,7 @@ class StoryManager {
   editStoryTitle(id, newTitle) {
     const story = this.stories.get(id);
     if (story) {
-      story.title = newTitle;
+      story.title = newTitle;  
       this.saveStories();
       this.renderStoryList();
     }
@@ -235,12 +235,13 @@ class StoryManager {
     const margin = 20;
     const textWidth = pageWidth - (2 * margin);
 
+    pdf.setFontSize(10);
+
     for (let i = 0; i < story.storyHistory.length; i++) {
       if (i > 0) {
         pdf.addPage();
       }
 
-      // Get the cached image URL
       const cacheKey = `${this.currentStoryId}_page_${i + 1}`;
       const imageUrl = this.storyGenerator?.imageCache.get(cacheKey);
 
@@ -259,8 +260,7 @@ class StoryManager {
                 const imgWidth = pageWidth - (2 * margin);
                 const imgHeight = (img.height * imgWidth) / img.width;
                 
-                // Ensure image doesn't overflow page
-                const maxImgHeight = pageHeight - (margin * 3); // Leave room for text
+                const maxImgHeight = pageHeight/2; 
                 const finalImgHeight = Math.min(imgHeight, maxImgHeight);
                 
                 canvas.width = img.width;
@@ -294,16 +294,13 @@ class StoryManager {
         }
       }
 
-      // Add text with proper word wrapping and pagination
       const text = story.storyHistory[i];
-      pdf.setFontSize(12);
       
-      // Split text to fit width
+      const availableHeight = pageHeight - currentY - margin;
+      
       const splitText = pdf.splitTextToSize(text, textWidth);
       
-      // Calculate if text needs a new page
-      const textHeight = splitText.length * 5; // Approximate height per line
-      const availableHeight = pageHeight - currentY - margin;
+      const textHeight = (splitText.length * 3.5); 
       
       if (textHeight > availableHeight) {
         pdf.addPage();
@@ -313,7 +310,7 @@ class StoryManager {
       pdf.text(splitText, margin, currentY);
     }
 
-    pdf.save(`${story.title || `story_${this.currentStoryId}`}.pdf`);
+    pdf.save(`story_${this.currentStoryId}.pdf`);
   }
 
   updatePDFButtonState() {
@@ -359,22 +356,18 @@ class StoryGenerator {
   async generatePageImage(pageContent, pageId) {
     const cacheKey = `${this.storyManager.currentStoryId}_page_${pageId}`;
     
-    // Check if we have a cached image URL
     if (this.imageCache.has(cacheKey)) {
       return this.createCachedImageElement(cacheKey);
     }
 
-    // Create new image element for generation
     const img = document.createElement('img');
     img.id = `page_${pageId}_image`;
     img.style.display = 'none';
     img.alt = pageContent;
     img.src = pageContent;
 
-    // Listen for the image src change (this indicates Dall-E or similar has generated the image)
     img.addEventListener('load', () => {
       if (img.src !== pageContent) {
-        // Image has been generated
         this.imageCache.set(cacheKey, img.src);
         this.saveImageCache();
         img.style.display = 'block';
@@ -395,22 +388,18 @@ class StoryGenerator {
     const currentContent = this.storyHistory[this.currentPage - 1];
     const contentElement = document.getElementById('storyContent');
     
-    // Clear previous content
     contentElement.innerHTML = '';
     
-    // Generate or retrieve image FIRST
     const imageElement = await this.generatePageImage(currentContent, this.currentPage);
     contentElement.appendChild(imageElement);
     
-    // Create text content SECOND
     const textDiv = document.createElement('div');
     textDiv.className = 'story-text';
-    textDiv.innerHTML = currentContent;
+    textDiv.textContent = currentContent; 
     contentElement.appendChild(textDiv);
     
     document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
     
-    // Update navigation buttons
     document.getElementById('prevPage').disabled = this.currentPage === 1;
     document.getElementById('nextPage').disabled = !hasMoreContent;
     
@@ -433,7 +422,6 @@ class StoryGenerator {
         this.storyData = state.storyData;
         this.storyHistory = state.storyHistory;
 
-        // If we have saved data, show the story container and hide the form
         if (this.storyData) {
           document.getElementById('storyForm').style.display = 'none';
           document.getElementById('storyContainer').classList.remove('hidden');
@@ -462,7 +450,6 @@ class StoryGenerator {
     this.storyHistory = [];
     this.saveToStorage();
     
-    // Show story container and hide form
     document.getElementById('storyForm').style.display = 'none';
     document.getElementById('storyContainer').classList.remove('hidden');
     
@@ -470,7 +457,6 @@ class StoryGenerator {
   }
 
   async generatePage() {
-    // If we already have this page in history, just display it
     if (this.storyHistory[this.currentPage - 1]) {
       this.displayCurrentPage();
       return;
@@ -509,7 +495,6 @@ class StoryGenerator {
 
       const data = await response.json();
       
-      // Store the current page in history
       this.storyHistory[this.currentPage - 1] = data.content;
       this.saveToStorage();
       
@@ -557,7 +542,6 @@ class StoryGenerator {
   }
 
   validateForm(formData) {
-    // Check required fields
     const requiredFields = ['storyType', 'narrativeTone', 'storyLength', 'pov', 'structure', 'targetAge'];
     return requiredFields.every(field => formData[field] && formData[field].length > 0);
   }
@@ -573,5 +557,4 @@ class StoryGenerator {
   }
 }
 
-// Initialize the story manager
 const storyManager = new StoryManager();
