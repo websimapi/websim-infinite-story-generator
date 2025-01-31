@@ -363,78 +363,6 @@ class StoryManager {
     }
   }
 
-  splitTextIntoSegments(text) {
-    const segments = [];
-    let currentIndex = 0;
-    let dialogueRegex = /"[^"]+"/g;
-    let match;
-
-    while ((match = dialogueRegex.exec(text)) !== null) {
-      // Add narrative text before dialogue if exists
-      if (match.index > currentIndex) {
-        segments.push({
-          type: 'narrative',
-          text: text.slice(currentIndex, match.index),
-          context: text
-        });
-      }
-
-      // Add dialogue
-      segments.push({
-        type: 'dialogue',
-        text: match[0],
-        context: {
-          before: text.slice(Math.max(0, match.index - 100), match.index),
-          current: match[0],
-          after: text.slice(match.index + match[0].length, Math.min(text.length, match.index + match[0].length + 100))
-        }
-      });
-
-      currentIndex = match.index + match[0].length;
-    }
-
-    // Add remaining narrative text if exists
-    if (currentIndex < text.length) {
-      segments.push({
-        type: 'narrative',
-        text: text.slice(currentIndex),
-        context: text
-      });
-    }
-
-    return segments;
-  }
-
-  getDialogueContext(dialogueText, context) {
-    return {
-      before: context.before,
-      current: dialogueText,
-      after: context.after
-    };
-  }
-
-  determineSpeakerGender(context) {
-    const genderIndicators = {
-      female: ['she', 'her', 'herself', 'woman', 'girl', 'mother', 'sister', 'daughter', 'aunt', 'lady'],
-      male: ['he', 'him', 'himself', 'man', 'boy', 'father', 'brother', 'son', 'uncle', 'gentleman']
-    };
-
-    const contextText = context.before + ' ' + context.current + ' ' + context.after;
-    const words = contextText.toLowerCase().split(/\W+/);
-    
-    let femaleScore = 0;
-    let maleScore = 0;
-
-    words.forEach(word => {
-      if (genderIndicators.female.includes(word)) femaleScore++;
-      if (genderIndicators.male.includes(word)) maleScore++;
-    });
-
-    if (femaleScore > maleScore) return 'female';
-    if (maleScore > femaleScore) return 'male';
-    return null;
-  }
-
   async toggleTTS() {
     if (this.speaking) {
       this.speechSynthesis.cancel();
@@ -544,6 +472,86 @@ class StoryManager {
     }
   }
 
+  splitTextIntoSegments(text) {
+    const segments = [];
+    let currentIndex = 0;
+    let dialogueRegex = /"[^"]+"/g;
+    let match;
+
+    while ((match = dialogueRegex.exec(text)) !== null) {
+      // Add narrative text before dialogue if exists
+      if (match.index > currentIndex) {
+        segments.push({
+          type: 'narrative',
+          text: text.slice(currentIndex, match.index),
+          context: text
+        });
+      }
+
+      // Add dialogue
+      segments.push({
+        type: 'dialogue',
+        text: match[0],
+        context: {
+          before: text.slice(Math.max(0, match.index - 100), match.index),
+          current: match[0],
+          after: text.slice(match.index + match[0].length, Math.min(text.length, match.index + match[0].length + 100))
+        }
+      });
+
+      currentIndex = match.index + match[0].length;
+    }
+
+    // Add remaining narrative text if exists
+    if (currentIndex < text.length) {
+      segments.push({
+        type: 'narrative',
+        text: text.slice(currentIndex),
+        context: text
+      });
+    }
+
+    return segments;
+  }
+
+  getDialogueContext(dialogueText, context) {
+    return {
+      before: context.before,
+      current: dialogueText,
+      after: context.after
+    };
+  }
+
+  determineSpeakerGender(context) {
+    const genderIndicators = {
+      female: ['she', 'her', 'herself', 'woman', 'girl', 'mother', 'sister', 'daughter', 'aunt', 'lady'],
+      male: ['he', 'him', 'himself', 'man', 'boy', 'father', 'brother', 'son', 'uncle', 'gentleman']
+    };
+
+    // Create a context window of words before and after the quote
+    const contextText = (context.before + ' ' + context.current + ' ' + context.after).toLowerCase();
+    const words = contextText.split(/\W+/);
+    
+    let femaleScore = 0;
+    let maleScore = 0;
+
+    // Analyze each word in the context
+    words.forEach(word => {
+      const cleanWord = word.toLowerCase().trim();
+      if (genderIndicators.female.includes(cleanWord)) {
+        femaleScore++;
+      }
+      if (genderIndicators.male.includes(cleanWord)) {
+        maleScore++;
+      }
+    });
+
+    // Return gender based on the highest score
+    if (femaleScore > maleScore) return 'female';
+    if (maleScore > femaleScore) return 'male';
+    return null;
+  }
+
   speakNextInQueue() {
     if (!this.speaking || this.speechQueue.length === 0) {
       this.speaking = false;
@@ -552,6 +560,35 @@ class StoryManager {
     }
 
     const utterance = this.speechQueue.shift();
+
+    // Configure voice settings based on the speaker type
+    if (utterance.voice) {
+      try {
+        const voices = this.speechSynthesis.getVoices();
+        if (utterance.voice === 'male') {
+          const maleVoices = voices.filter(voice => 
+            voice.name.toLowerCase().includes('male') || 
+            voice.name.toLowerCase().includes('man')
+          );
+          if (maleVoices.length > 0) {
+            utterance.voice = maleVoices[0];
+            utterance.pitch = 0.8; // Deeper voice for males
+          }
+        } else if (utterance.voice === 'female') {
+          const femaleVoices = voices.filter(voice => 
+            voice.name.toLowerCase().includes('female') || 
+            voice.name.toLowerCase().includes('woman')
+          );
+          if (femaleVoices.length > 0) {
+            utterance.voice = femaleVoices[0];
+            utterance.pitch = 1.2; // Higher voice for females
+          }
+        }
+      } catch (error) {
+        console.error('Error setting voice:', error);
+      }
+    }
+
     utterance.onend = () => {
       if (this.speaking) {
         this.speakNextInQueue();
