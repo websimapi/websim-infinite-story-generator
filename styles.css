@@ -24,6 +24,7 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  padding-top: 4rem;
 }
 
 h1 {
@@ -246,6 +247,35 @@ input:focus, select:focus, textarea:focus {
 
 .hidden {
   display: none;
+}
+
+.home-icon {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  cursor: pointer;
+  background: var(--primary-color);
+  padding: 10px;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.home-icon:hover {
+  transform: scale(1.1);
+  background-color: var(--secondary-color);
+}
+
+.home-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
 }
 
 @media (max-width: 768px) {

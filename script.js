@@ -6,6 +6,8 @@ class StoryManager {
     this.loadStories();
     this.setupEventListeners();
     this.showStoryList();
+    // Add home icon click handler
+    document.getElementById('homeIcon').addEventListener('click', () => this.showStoryList());
   }
 
   setupEventListeners() {
