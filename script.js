@@ -1,3 +1,5 @@
+const { jsPDF } = window.jspdf;
+
 class StoryManager {
   constructor() {
     this.stories = new Map();
@@ -8,6 +10,8 @@ class StoryManager {
     this.showStoryList();
     // Add home icon click handler
     document.getElementById('homeIcon').addEventListener('click', () => this.showStoryList());
+    document.getElementById('pdfIcon').addEventListener('click', () => this.downloadPDF());
+    this.updatePDFButtonState();
   }
 
   setupEventListeners() {
@@ -150,6 +154,82 @@ class StoryManager {
     this.currentStoryId = id;
     this.saveStories();
   }
+
+  async downloadPDF() {
+    if (!this.currentStoryId) return;
+    
+    const story = this.stories.get(this.currentStoryId);
+    if (!story) return;
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const textWidth = pageWidth - (2 * margin);
+
+    for (let i = 0; i < story.storyHistory.length; i++) {
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      // Get the cached image URL
+      const cacheKey = `${this.currentStoryId}_page_${i + 1}`;
+      const imageUrl = this.storyGenerator?.imageCache.get(cacheKey);
+
+      if (imageUrl) {
+        try {
+          // Convert data URL to image for PDF
+          await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              // Calculate image dimensions to fit page width while maintaining aspect ratio
+              const imgWidth = pageWidth - (2 * margin);
+              const imgHeight = (img.height * imgWidth) / img.width;
+              
+              pdf.addImage(
+                img,
+                'JPEG',
+                margin,
+                margin,
+                imgWidth,
+                imgHeight
+              );
+              
+              // Add text below image
+              const textY = margin + imgHeight + 10;
+              const text = story.storyHistory[i];
+              const splitText = pdf.splitTextToSize(text, textWidth);
+              pdf.setFontSize(12);
+              pdf.text(splitText, margin, textY);
+              
+              resolve();
+            };
+            img.onerror = reject;
+            img.src = imageUrl;
+          });
+        } catch (error) {
+          console.error('Error adding image to PDF:', error);
+        }
+      }
+    }
+
+    // Save the PDF
+    pdf.save(`story_${this.currentStoryId}.pdf`);
+  }
+
+  updatePDFButtonState() {
+    const pdfIcon = document.getElementById('pdfIcon');
+    if (this.currentStoryId && this.stories.get(this.currentStoryId)?.storyHistory.length > 0) {
+      pdfIcon.classList.remove('disabled');
+    } else {
+      pdfIcon.classList.add('disabled');
+    }
+  }
 }
 
 class StoryGenerator {
@@ -239,6 +319,8 @@ class StoryGenerator {
     // Update navigation buttons
     document.getElementById('prevPage').disabled = this.currentPage === 1;
     document.getElementById('nextPage').disabled = !hasMoreContent;
+    
+    this.storyManager.updatePDFButtonState();
   }
 
   setupEventListeners() {
