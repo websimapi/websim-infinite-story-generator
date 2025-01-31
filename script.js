@@ -528,6 +528,18 @@ class StoryManager {
       male: ['he', 'him', 'himself', 'man', 'boy', 'father', 'brother', 'son', 'uncle', 'gentleman']
     };
 
+    // Take special note of words immediately following the quote
+    const afterQuoteContext = context.after.toLowerCase().split(/\W+/);
+    const immediateFollowingWord = afterQuoteContext[0];
+    
+    // If the word immediately following is a gender indicator, give it more weight
+    if (genderIndicators.male.includes(immediateFollowingWord)) {
+      return 'male';
+    }
+    if (genderIndicators.female.includes(immediateFollowingWord)) {
+      return 'female';
+    }
+
     // Create a context window of words before and after the quote
     const contextText = (context.before + ' ' + context.current + ' ' + context.after).toLowerCase();
     const words = contextText.split(/\W+/);
@@ -535,18 +547,30 @@ class StoryManager {
     let femaleScore = 0;
     let maleScore = 0;
 
-    // Analyze each word in the context
-    words.forEach(word => {
+    // Analyze each word in the context, giving more weight to words closer to the quote
+    words.forEach((word, index) => {
       const cleanWord = word.toLowerCase().trim();
+      // Give double weight to words immediately following the quote
+      const weight = index === words.indexOf(context.current) + 1 ? 2 : 1;
+      
       if (genderIndicators.female.includes(cleanWord)) {
-        femaleScore++;
+        femaleScore += weight;
       }
       if (genderIndicators.male.includes(cleanWord)) {
-        maleScore++;
+        maleScore += weight;
       }
     });
 
-    // Return gender based on the highest score
+    // Check specifically for "he said" or "she said" patterns after the quote
+    const afterText = context.after.toLowerCase();
+    if (afterText.includes('he said') || afterText.includes('he asked') || afterText.includes('he replied')) {
+      maleScore += 3; // Give extra weight to these clear indicators
+    }
+    if (afterText.includes('she said') || afterText.includes('she asked') || afterText.includes('she replied')) {
+      femaleScore += 3; // Give extra weight to these clear indicators
+    }
+
+    // Return gender based on the weighted score
     if (femaleScore > maleScore) return 'female';
     if (maleScore > femaleScore) return 'male';
     return null;
@@ -560,33 +584,33 @@ class StoryManager {
     }
 
     const utterance = this.speechQueue.shift();
+    const voices = this.speechSynthesis.getVoices();
+
+    // Try to find specific voices first
+    const maleVoice = voices.find(voice => 
+      voice.name.includes('English') && 
+      (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('man'))
+    );
+    const femaleVoice = voices.find(voice => 
+      voice.name.includes('English') && 
+      (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman'))
+    );
+    const narratorVoice = voices.find(v => v.name.includes('Google US English')) || voices[0];
 
     // Configure voice settings based on the speaker type
-    if (utterance.voice) {
-      try {
-        const voices = this.speechSynthesis.getVoices();
-        if (utterance.voice === 'male') {
-          const maleVoices = voices.filter(voice => 
-            voice.name.toLowerCase().includes('male') || 
-            voice.name.toLowerCase().includes('man')
-          );
-          if (maleVoices.length > 0) {
-            utterance.voice = maleVoices[0];
-            utterance.pitch = 0.8; // Deeper voice for males
-          }
-        } else if (utterance.voice === 'female') {
-          const femaleVoices = voices.filter(voice => 
-            voice.name.toLowerCase().includes('female') || 
-            voice.name.toLowerCase().includes('woman')
-          );
-          if (femaleVoices.length > 0) {
-            utterance.voice = femaleVoices[0];
-            utterance.pitch = 1.2; // Higher voice for females
-          }
-        }
-      } catch (error) {
-        console.error('Error setting voice:', error);
-      }
+    if (utterance.voice === 'male' && maleVoice) {
+      utterance.voice = maleVoice;
+      utterance.pitch = 0.8; // Deeper voice for males
+      utterance.rate = 0.95;
+    } else if (utterance.voice === 'female' && femaleVoice) {
+      utterance.voice = femaleVoice;
+      utterance.pitch = 1.2; // Higher voice for females
+      utterance.rate = 1.0;
+    } else {
+      // Default narrator voice
+      utterance.voice = narratorVoice;
+      utterance.pitch = 1.0;
+      utterance.rate = 1.0;
     }
 
     utterance.onend = () => {
