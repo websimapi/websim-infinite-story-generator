@@ -158,8 +158,87 @@ class StoryGenerator {
     this.currentPage = 1;
     this.storyData = null;
     this.storyHistory = [];
-    this.pageImages = new Map(); // Store generated images
+    this.imageCache = new Map();
+    this.loadImageCache();
     this.setupEventListeners();
+  }
+
+  loadImageCache() {
+    try {
+      const savedCache = localStorage.getItem('storyImageCache');
+      if (savedCache) {
+        this.imageCache = new Map(JSON.parse(savedCache));
+      }
+    } catch (error) {
+      console.error('Error loading image cache:', error);
+    }
+  }
+
+  saveImageCache() {
+    try {
+      localStorage.setItem('storyImageCache', JSON.stringify([...this.imageCache]));
+    } catch (error) {
+      console.error('Error saving image cache:', error);
+    }
+  }
+
+  async generatePageImage(pageContent, pageId) {
+    const cacheKey = `${this.storyManager.currentStoryId}_page_${pageId}`;
+    
+    // Check if we have a cached image URL
+    if (this.imageCache.has(cacheKey)) {
+      return this.createCachedImageElement(cacheKey);
+    }
+
+    // Create new image element for generation
+    const img = document.createElement('img');
+    img.id = `page_${pageId}_image`;
+    img.style.display = 'none';
+    img.alt = pageContent;
+    img.src = pageContent;
+
+    // Listen for the image src change (this indicates Dall-E or similar has generated the image)
+    img.addEventListener('load', () => {
+      if (img.src !== pageContent) {
+        // Image has been generated
+        this.imageCache.set(cacheKey, img.src);
+        this.saveImageCache();
+        img.style.display = 'block';
+      }
+    });
+
+    return img;
+  }
+
+  createCachedImageElement(cacheKey) {
+    const div = document.createElement('div');
+    div.className = 'story-page-image';
+    div.style.backgroundImage = `url(${this.imageCache.get(cacheKey)})`;
+    return div;
+  }
+
+  async displayCurrentPage(hasMoreContent = true) {
+    const currentContent = this.storyHistory[this.currentPage - 1];
+    const contentElement = document.getElementById('storyContent');
+    
+    // Clear previous content
+    contentElement.innerHTML = '';
+    
+    // Create text content
+    const textDiv = document.createElement('div');
+    textDiv.className = 'story-text';
+    textDiv.innerHTML = currentContent;
+    contentElement.appendChild(textDiv);
+    
+    // Generate or retrieve image
+    const imageElement = await this.generatePageImage(currentContent, this.currentPage);
+    contentElement.appendChild(imageElement);
+    
+    document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
+    
+    // Update navigation buttons
+    document.getElementById('prevPage').disabled = this.currentPage === 1;
+    document.getElementById('nextPage').disabled = !hasMoreContent;
   }
 
   setupEventListeners() {
@@ -258,70 +337,11 @@ class StoryGenerator {
       this.storyHistory[this.currentPage - 1] = data.content;
       this.saveToStorage();
       
-      // Create and set up the image for this page
-      await this.setupPageImage(this.currentPage - 1, data.content);
-      
       this.displayCurrentPage(data.hasMoreContent);
     } catch (error) {
       console.error('Error generating story:', error);
       document.getElementById('storyContent').textContent = 'An error occurred while generating the story. Please try again.';
     }
-  }
-
-  async setupPageImage(pageIndex, content) {
-    const imgId = `page-image-${pageIndex}`;
-    let imgElement = document.getElementById(imgId);
-    
-    if (!imgElement) {
-      imgElement = document.createElement('img');
-      imgElement.id = imgId;
-      imgElement.className = 'page-image hidden';
-      imgElement.alt = content;
-      document.getElementById('storyContent').appendChild(imgElement);
-    }
-
-    // Store reference to image
-    this.pageImages.set(pageIndex, imgElement);
-
-    // Set up load event listener before setting src
-    await new Promise((resolve) => {
-      const originalSrc = content;
-      
-      imgElement.onload = () => {
-        if (imgElement.src !== originalSrc) {
-          imgElement.classList.remove('hidden');
-          resolve();
-        }
-      };
-
-      imgElement.src = content;
-    });
-  }
-
-  displayCurrentPage(hasMoreContent = true) {
-    const currentContent = this.storyHistory[this.currentPage - 1];
-    const contentElement = document.getElementById('storyContent');
-    
-    // Clear existing content
-    contentElement.innerHTML = '';
-    
-    // Add text content
-    const textDiv = document.createElement('div');
-    textDiv.className = 'story-text';
-    textDiv.textContent = currentContent;
-    contentElement.appendChild(textDiv);
-
-    // If we have an image for this page, add it
-    const pageImage = this.pageImages.get(this.currentPage - 1);
-    if (pageImage) {
-      contentElement.appendChild(pageImage);
-    }
-
-    document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
-    
-    // Update navigation buttons
-    document.getElementById('prevPage').disabled = this.currentPage === 1;
-    document.getElementById('nextPage').disabled = !hasMoreContent;
   }
 
   async navigatePage(direction) {
