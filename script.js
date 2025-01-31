@@ -161,6 +161,13 @@ class StoryManager {
     const story = this.stories.get(this.currentStoryId);
     if (!story) return;
 
+    // Ensure jsPDF is properly loaded
+    if (typeof window.jspdf === 'undefined') {
+      console.error('jsPDF library not loaded');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -186,35 +193,51 @@ class StoryManager {
           // Convert data URL to image for PDF
           await new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = "Anonymous";  // Add this line to handle CORS
             img.onload = () => {
-              // Calculate image dimensions to fit page width while maintaining aspect ratio
-              const imgWidth = pageWidth - (2 * margin);
-              const imgHeight = (img.height * imgWidth) / img.width;
-              
-              pdf.addImage(
-                img,
-                'JPEG',
-                margin,
-                margin,
-                imgWidth,
-                imgHeight
-              );
-              
-              // Add text below image
-              const textY = margin + imgHeight + 10;
-              const text = story.storyHistory[i];
-              const splitText = pdf.splitTextToSize(text, textWidth);
-              pdf.setFontSize(12);
-              pdf.text(splitText, margin, textY);
-              
-              resolve();
+              try {
+                // Calculate image dimensions to fit page width while maintaining aspect ratio
+                const imgWidth = pageWidth - (2 * margin);
+                const imgHeight = (img.height * imgWidth) / img.width;
+                
+                pdf.addImage(
+                  img,
+                  'JPEG',
+                  margin,
+                  margin,
+                  imgWidth,
+                  imgHeight
+                );
+                
+                // Add text below image
+                const textY = margin + imgHeight + 10;
+                const text = story.storyHistory[i];
+                const splitText = pdf.splitTextToSize(text, textWidth);
+                pdf.setFontSize(12);
+                pdf.text(splitText, margin, textY);
+                
+                resolve();
+              } catch (e) {
+                reject(e);
+              }
             };
             img.onerror = reject;
             img.src = imageUrl;
           });
         } catch (error) {
           console.error('Error adding image to PDF:', error);
+          // Continue with next page even if image fails
+          const text = story.storyHistory[i];
+          const splitText = pdf.splitTextToSize(text, textWidth);
+          pdf.setFontSize(12);
+          pdf.text(splitText, margin, margin);
         }
+      } else {
+        // If no image, just add text
+        const text = story.storyHistory[i];
+        const splitText = pdf.splitTextToSize(text, textWidth);
+        pdf.setFontSize(12);
+        pdf.text(splitText, margin, margin);
       }
     }
 
