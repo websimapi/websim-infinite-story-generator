@@ -206,11 +206,7 @@ class StoryManager {
   editStoryTitle(id, newTitle) {
     const story = this.stories.get(id);
     if (story) {
-      if (!story.title) {
-        story.title = newTitle;
-      } else {
-        story.title = newTitle;
-      }
+      story.title = newTitle;
       this.saveStories();
       this.renderStoryList();
     }
@@ -298,18 +294,16 @@ class StoryManager {
         }
       }
 
-      // Add text with proper word wrapping
+      // Add text with proper word wrapping and pagination
       const text = story.storyHistory[i];
       pdf.setFontSize(12);
-      
-      // Calculate available height for text
-      const availableHeight = pageHeight - currentY - margin;
       
       // Split text to fit width
       const splitText = pdf.splitTextToSize(text, textWidth);
       
       // Calculate if text needs a new page
       const textHeight = splitText.length * 5; // Approximate height per line
+      const availableHeight = pageHeight - currentY - margin;
       
       if (textHeight > availableHeight) {
         pdf.addPage();
@@ -319,7 +313,7 @@ class StoryManager {
       pdf.text(splitText, margin, currentY);
     }
 
-    pdf.save(`story_${this.currentStoryId}.pdf`);
+    pdf.save(`${story.title || `story_${this.currentStoryId}`}.pdf`);
   }
 
   updatePDFButtonState() {
