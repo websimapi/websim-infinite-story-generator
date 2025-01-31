@@ -375,7 +375,7 @@ class StoryManager {
 
       const currentText = story.storyHistory[story.currentPage - 1];
       
-      // Split text while preserving quotes
+      // Split text into segments that preserve quotes
       const segments = currentText.match(/("[^"]+"|[^"]+)/g) || [currentText];
       
       // Process each segment
