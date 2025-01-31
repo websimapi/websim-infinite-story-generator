@@ -5,6 +5,8 @@ class StoryManager {
     this.stories = new Map();
     this.currentStoryId = null;
     this.storyGenerator = null;
+    this.speaking = false;
+    this.speechSynthesis = window.speechSynthesis;
     this.loadStories();
     this.setupEventListeners();
     this.showStoryList();
@@ -16,6 +18,7 @@ class StoryManager {
 
   setupEventListeners() {
     document.getElementById('createNewStory').addEventListener('click', () => this.startNewStory());
+    document.getElementById('ttsButton').addEventListener('click', () => this.toggleTTS());
   }
 
   loadStories() {
@@ -66,22 +69,24 @@ class StoryManager {
       const storyCard = document.createElement('div');
       storyCard.className = 'story-card';
       
-      // Create the title section with edit functionality
       const titleSection = document.createElement('div');
       titleSection.className = 'story-title';
-      titleSection.innerHTML = `
-        <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
-        <button class="edit-title-btn" title="Edit title">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-          </svg>
-        </button>
-      `;
+      
+      const renderTitleView = () => {
+        titleSection.innerHTML = `
+          <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
+          <button class="edit-title-btn" aria-label="Edit title">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+          </button>
+        `;
 
-      const titleElement = titleSection.querySelector('h3');
-      const editButton = titleSection.querySelector('.edit-title-btn');
+        const editButton = titleSection.querySelector('.edit-title-btn');
+        editButton.addEventListener('click', renderTitleEdit);
+      };
 
-      editButton.addEventListener('click', () => {
+      const renderTitleEdit = () => {
         const currentTitle = story.title || `${story.storyData.storyType} Story`;
         titleSection.innerHTML = `
           <input type="text" class="edit-title-input" value="${currentTitle}">
@@ -97,7 +102,9 @@ class StoryManager {
         const saveTitle = () => {
           const newTitle = input.value.trim();
           if (newTitle) {
-            this.editStoryTitle(id, newTitle);
+            story.title = newTitle;
+            this.saveStories();
+            renderTitleView();
           }
         };
 
@@ -107,8 +114,9 @@ class StoryManager {
             saveTitle();
           }
         });
-      });
+      };
 
+      renderTitleView();
       storyCard.appendChild(titleSection);
       
       // Add the rest of the card content
@@ -350,6 +358,29 @@ class StoryManager {
       pdfIcon.classList.remove('disabled');
     } else {
       pdfIcon.classList.add('disabled');
+    }
+  }
+
+  toggleTTS() {
+    if (this.speaking) {
+      this.speechSynthesis.cancel();
+      this.speaking = false;
+      document.getElementById('ttsButton').textContent = 'Read Aloud';
+    } else {
+      const story = this.stories.get(this.currentStoryId);
+      if (!story) return;
+
+      const currentText = story.storyHistory[story.currentPage - 1];
+      const utterance = new SpeechSynthesisUtterance(currentText);
+      
+      utterance.onend = () => {
+        this.speaking = false;
+        document.getElementById('ttsButton').textContent = 'Read Aloud';
+      };
+
+      this.speaking = true;
+      document.getElementById('ttsButton').textContent = 'Stop Reading';
+      this.speechSynthesis.speak(utterance);
     }
   }
 }
