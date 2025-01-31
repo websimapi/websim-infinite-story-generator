@@ -65,8 +65,54 @@ class StoryManager {
     this.stories.forEach((story, id) => {
       const storyCard = document.createElement('div');
       storyCard.className = 'story-card';
-      storyCard.innerHTML = `
-        <h3>${story.storyData.storyType} Story</h3>
+      
+      // Create the title section with edit functionality
+      const titleSection = document.createElement('div');
+      titleSection.className = 'story-title';
+      titleSection.innerHTML = `
+        <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
+        <button class="edit-title-btn" title="Edit title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+        </button>
+      `;
+
+      const titleElement = titleSection.querySelector('h3');
+      const editButton = titleSection.querySelector('.edit-title-btn');
+
+      editButton.addEventListener('click', () => {
+        const currentTitle = story.title || `${story.storyData.storyType} Story`;
+        titleSection.innerHTML = `
+          <input type="text" class="edit-title-input" value="${currentTitle}">
+          <button class="save-title-btn">Save</button>
+        `;
+
+        const input = titleSection.querySelector('.edit-title-input');
+        const saveButton = titleSection.querySelector('.save-title-btn');
+
+        input.focus();
+        input.select();
+
+        const saveTitle = () => {
+          const newTitle = input.value.trim();
+          if (newTitle) {
+            this.editStoryTitle(id, newTitle);
+          }
+        };
+
+        saveButton.addEventListener('click', saveTitle);
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            saveTitle();
+          }
+        });
+      });
+
+      storyCard.appendChild(titleSection);
+      
+      // Add the rest of the card content
+      storyCard.innerHTML += `
         <p>Genre: ${story.storyData.storyType} | Tone: ${story.storyData.narrativeTone}</p>
         <p>Pages: ${story.storyHistory.length}</p>
         <div class="story-card-actions">
@@ -118,7 +164,7 @@ class StoryManager {
     modal.className = 'modal';
     modal.innerHTML = `
       <div class="modal-content">
-        <h2>Story Details</h2>
+        <h2>${story.title || `${story.storyData.storyType} Story`}</h2>
         <div class="story-details">
           <p><strong>Type:</strong> ${story.storyData.storyType}</p>
           <p><strong>Tone:</strong> ${story.storyData.narrativeTone}</p>
@@ -145,14 +191,29 @@ class StoryManager {
 
   saveStory(storyData, currentPage, storyHistory) {
     const id = this.currentStoryId || Date.now().toString();
+    const existingStory = this.stories.get(id);
     this.stories.set(id, {
       id,
+      title: existingStory?.title || `${storyData.storyType} Story`,
       storyData,
       currentPage,
       storyHistory
     });
     this.currentStoryId = id;
     this.saveStories();
+  }
+
+  editStoryTitle(id, newTitle) {
+    const story = this.stories.get(id);
+    if (story) {
+      if (!story.title) {
+        story.title = newTitle;
+      } else {
+        story.title = newTitle;
+      }
+      this.saveStories();
+      this.renderStoryList();
+    }
   }
 
   async downloadPDF() {

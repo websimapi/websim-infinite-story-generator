@@ -336,6 +336,57 @@ input:focus, select:focus, textarea:focus {
   margin-top: 20px;
 }
 
+.story-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.5rem;
+}
+
+.story-title h3 {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.edit-title-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.edit-title-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--primary-color);
+}
+
+.edit-title-btn:hover svg {
+  fill: var(--secondary-color);
+}
+
+.edit-title-input {
+  flex-grow: 1;
+  padding: 5px;
+  font-size: 1.17em;
+  font-weight: bold;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.save-title-btn {
+  padding: 5px 10px;
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-title-btn:hover {
+  background-color: #2980b9;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
