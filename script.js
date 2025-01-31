@@ -285,7 +285,8 @@ class StoryGenerator {
   }
 
   resetForm() {
-    document.getElementById('storyForm').reset();
+    const formElement = document.getElementById('storyFormElement');
+    formElement.reset();
     document.getElementById('storyForm').style.display = 'block';
     document.getElementById('storyContainer').classList.add('hidden');
     

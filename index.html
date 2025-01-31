@@ -19,188 +19,190 @@
     </div>
 
     <div id="storyForm" class="form-container hidden">
-      <!-- ...existing form code... -->
-      <section class="form-section">
-        <h2>Genre & Style</h2>
-        <div class="form-group">
-          <label for="storyType">Story Type:</label>
-          <select id="storyType" required>
-            <option value="">Select a type...</option>
-            <option value="sci-fi">Science Fiction</option>
-            <option value="fantasy">Fantasy</option>
-            <option value="romance">Romance</option>
-            <option value="mystery">Mystery</option>
-            <option value="horror">Horror</option>
-            <option value="adventure">Adventure</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="narrativeTone">Narrative Tone:</label>
-          <select id="narrativeTone" required>
-            <option value="">Select tone...</option>
-            <option value="serious">Serious</option>
-            <option value="humorous">Humorous</option>
-            <option value="dark">Dark</option>
-            <option value="lighthearted">Lighthearted</option>
-            <option value="whimsical">Whimsical</option>
-          </select>
-        </div>
-      </section>
+      <form id="storyFormElement">
+        <!-- Genre & Style Section -->
+        <section class="form-section">
+          <h2>Genre & Style</h2>
+          <div class="form-group">
+            <label for="storyType">Story Type:</label>
+            <select id="storyType" required>
+              <option value="">Select a type...</option>
+              <option value="sci-fi">Science Fiction</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="romance">Romance</option>
+              <option value="mystery">Mystery</option>
+              <option value="horror">Horror</option>
+              <option value="adventure">Adventure</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="narrativeTone">Narrative Tone:</label>
+            <select id="narrativeTone" required>
+              <option value="">Select tone...</option>
+              <option value="serious">Serious</option>
+              <option value="humorous">Humorous</option>
+              <option value="dark">Dark</option>
+              <option value="lighthearted">Lighthearted</option>
+              <option value="whimsical">Whimsical</option>
+            </select>
+          </div>
+        </section>
 
-      <!-- Structure Section -->
-      <section class="form-section">
-        <h2>Structure</h2>
-        <div class="form-group">
-          <label for="storyLength">Story Length:</label>
-          <select id="storyLength" required>
-            <option value="">Select length...</option>
-            <option value="short">Short Story</option>
-            <option value="novella">Novella</option>
-            <option value="novel">Novel</option>
-          </select>
-        </div>
+        <!-- Structure Section -->
+        <section class="form-section">
+          <h2>Structure</h2>
+          <div class="form-group">
+            <label for="storyLength">Story Length:</label>
+            <select id="storyLength" required>
+              <option value="">Select length...</option>
+              <option value="short">Short Story</option>
+              <option value="novella">Novella</option>
+              <option value="novel">Novel</option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label for="pov">Point of View:</label>
-          <select id="pov" required>
-            <option value="">Select POV...</option>
-            <option value="first">First Person</option>
-            <option value="third">Third Person</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label for="pov">Point of View:</label>
+            <select id="pov" required>
+              <option value="">Select POV...</option>
+              <option value="first">First Person</option>
+              <option value="third">Third Person</option>
+            </select>
+          </div>
 
-        <div class="form-group">
-          <label for="structure">Narrative Structure:</label>
-          <select id="structure" required>
-            <option value="">Select structure...</option>
-            <option value="linear">Linear</option>
-            <option value="nonlinear">Non-linear</option>
-          </select>
-        </div>
-      </section>
+          <div class="form-group">
+            <label for="structure">Narrative Structure:</label>
+            <select id="structure" required>
+              <option value="">Select structure...</option>
+              <option value="linear">Linear</option>
+              <option value="nonlinear">Non-linear</option>
+            </select>
+          </div>
+        </section>
 
-      <!-- Characters Section -->
-      <section class="form-section">
-        <h2>Characters</h2>
-        <div class="form-group">
-          <label for="mainCharacter">Main Character Description:</label>
-          <textarea id="mainCharacter" rows="3" placeholder="Describe your main character..."></textarea>
-        </div>
+        <!-- Characters Section -->
+        <section class="form-section">
+          <h2>Characters</h2>
+          <div class="form-group">
+            <label for="mainCharacter">Main Character Description:</label>
+            <textarea id="mainCharacter" rows="3" placeholder="Describe your main character..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="motivation">Character Motivations:</label>
-          <textarea id="motivation" rows="3" placeholder="What drives your character?"></textarea>
-        </div>
+          <div class="form-group">
+            <label for="motivation">Character Motivations:</label>
+            <textarea id="motivation" rows="3" placeholder="What drives your character?"></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="relationships">Interpersonal Relationships:</label>
-          <textarea id="relationships" rows="3" placeholder="Describe key relationships..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="relationships">Interpersonal Relationships:</label>
+            <textarea id="relationships" rows="3" placeholder="Describe key relationships..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="backstory">Character Backstories:</label>
-          <textarea id="backstory" rows="3" placeholder="Important background information..."></textarea>
-        </div>
-      </section>
+          <div class="form-group">
+            <label for="backstory">Character Backstories:</label>
+            <textarea id="backstory" rows="3" placeholder="Important background information..."></textarea>
+          </div>
+        </section>
 
-      <!-- Plot Section -->
-      <section class="form-section">
-        <h2>Plot</h2>
-        <div class="form-group">
-          <label for="initialScenario">Initial Scenario/Conflict:</label>
-          <textarea id="initialScenario" rows="3" placeholder="What starts the story?"></textarea>
-        </div>
+        <!-- Plot Section -->
+        <section class="form-section">
+          <h2>Plot</h2>
+          <div class="form-group">
+            <label for="initialScenario">Initial Scenario/Conflict:</label>
+            <textarea id="initialScenario" rows="3" placeholder="What starts the story?"></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="plotPoints">Major Plot Points:</label>
-          <textarea id="plotPoints" rows="3" placeholder="Key events in the story..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="plotPoints">Major Plot Points:</label>
+            <textarea id="plotPoints" rows="3" placeholder="Key events in the story..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="themes">Desired Themes:</label>
-          <textarea id="themes" rows="3" placeholder="Main themes to explore..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="themes">Desired Themes:</label>
+            <textarea id="themes" rows="3" placeholder="Main themes to explore..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="plotTwists">Potential Plot Twists:</label>
-          <textarea id="plotTwists" rows="3" placeholder="Surprising turns in the story..."></textarea>
-        </div>
-      </section>
+          <div class="form-group">
+            <label for="plotTwists">Potential Plot Twists:</label>
+            <textarea id="plotTwists" rows="3" placeholder="Surprising turns in the story..."></textarea>
+          </div>
+        </section>
 
-      <!-- Setting Section -->
-      <section class="form-section">
-        <h2>Setting</h2>
-        <div class="form-group">
-          <label for="timePeriod">Time Period:</label>
-          <input type="text" id="timePeriod" placeholder="When does the story take place?">
-        </div>
+        <!-- Setting Section -->
+        <section class="form-section">
+          <h2>Setting</h2>
+          <div class="form-group">
+            <label for="timePeriod">Time Period:</label>
+            <input type="text" id="timePeriod" placeholder="When does the story take place?">
+          </div>
 
-        <div class="form-group">
-          <label for="location">Geographic Location:</label>
-          <input type="text" id="location" placeholder="Where does the story take place?">
-        </div>
+          <div class="form-group">
+            <label for="location">Geographic Location:</label>
+            <input type="text" id="location" placeholder="Where does the story take place?">
+          </div>
 
-        <div class="form-group">
-          <label for="worldBuilding">World-building Specifics:</label>
-          <textarea id="worldBuilding" rows="3" placeholder="Details about the story's world..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="worldBuilding">World-building Specifics:</label>
+            <textarea id="worldBuilding" rows="3" placeholder="Details about the story's world..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="culturalContext">Cultural/Environmental Context:</label>
-          <textarea id="culturalContext" rows="3" placeholder="Social and environmental factors..."></textarea>
-        </div>
-      </section>
+          <div class="form-group">
+            <label for="culturalContext">Cultural/Environmental Context:</label>
+            <textarea id="culturalContext" rows="3" placeholder="Social and environmental factors..."></textarea>
+          </div>
+        </section>
 
-      <!-- Constraints Section -->
-      <section class="form-section">
-        <h2>Constraints</h2>
-        <div class="form-group">
-          <label for="plotRequirements">Specific Plot Requirements:</label>
-          <textarea id="plotRequirements" rows="3" placeholder="Must-have elements..."></textarea>
-        </div>
+        <!-- Constraints Section -->
+        <section class="form-section">
+          <h2>Constraints</h2>
+          <div class="form-group">
+            <label for="plotRequirements">Specific Plot Requirements:</label>
+            <textarea id="plotRequirements" rows="3" placeholder="Must-have elements..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="forbiddenContent">Forbidden Content:</label>
-          <textarea id="forbiddenContent" rows="3" placeholder="Elements to avoid..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="forbiddenContent">Forbidden Content:</label>
+            <textarea id="forbiddenContent" rows="3" placeholder="Elements to avoid..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="targetAge">Target Audience Age Range:</label>
-          <select id="targetAge" required>
-            <option value="">Select age range...</option>
-            <option value="children">Children (5-12)</option>
-            <option value="young-adult">Young Adult (13-17)</option>
-            <option value="adult">Adult (18+)</option>
-          </select>
-        </div>
-      </section>
+          <div class="form-group">
+            <label for="targetAge">Target Audience Age Range:</label>
+            <select id="targetAge" required>
+              <option value="">Select age range...</option>
+              <option value="children">Children (5-12)</option>
+              <option value="young-adult">Young Adult (13-17)</option>
+              <option value="adult">Adult (18+)</option>
+            </select>
+          </div>
+        </section>
 
-      <!-- Creative Sparks Section -->
-      <section class="form-section">
-        <h2>Creative Sparks (Optional)</h2>
-        <div class="form-group">
-          <label for="narrativeSeeds">Specific Narrative Seeds:</label>
-          <textarea id="narrativeSeeds" rows="3" placeholder="Interesting story elements..."></textarea>
-        </div>
+        <!-- Creative Sparks Section -->
+        <section class="form-section">
+          <h2>Creative Sparks (Optional)</h2>
+          <div class="form-group">
+            <label for="narrativeSeeds">Specific Narrative Seeds:</label>
+            <textarea id="narrativeSeeds" rows="3" placeholder="Interesting story elements..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="uniquePremise">Unique Story Premise:</label>
-          <textarea id="uniquePremise" rows="3" placeholder="What makes this story special?"></textarea>
-        </div>
+          <div class="form-group">
+            <label for="uniquePremise">Unique Story Premise:</label>
+            <textarea id="uniquePremise" rows="3" placeholder="What makes this story special?"></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="emotionalCore">Emotional Core:</label>
-          <textarea id="emotionalCore" rows="3" placeholder="Central emotional themes..."></textarea>
-        </div>
+          <div class="form-group">
+            <label for="emotionalCore">Emotional Core:</label>
+            <textarea id="emotionalCore" rows="3" placeholder="Central emotional themes..."></textarea>
+          </div>
 
-        <div class="form-group">
-          <label for="centralMetaphor">Central Metaphorical Concept:</label>
-          <textarea id="centralMetaphor" rows="3" placeholder="Overarching metaphor or symbolism..."></textarea>
-        </div>
-      </section>
+          <div class="form-group">
+            <label for="centralMetaphor">Central Metaphorical Concept:</label>
+            <textarea id="centralMetaphor" rows="3" placeholder="Overarching metaphor or symbolism..."></textarea>
+          </div>
+        </section>
 
-      <button id="generateBtn" class="generate-btn">Generate Story</button>
+        <button type="button" id="generateBtn" class="generate-btn">Generate Story</button>
+      </form>
     </div>
 
     <div id="storyContainer" class="story-container hidden">
