@@ -375,7 +375,7 @@ class StoryManager {
 
       const currentText = story.storyHistory[story.currentPage - 1];
       
-      // Split text into segments that preserve quotes
+      // Split text while preserving quotes
       const segments = currentText.match(/("[^"]+"|[^"]+)/g) || [currentText];
       
       // Process each segment
@@ -412,6 +412,29 @@ class StoryManager {
       this.speaking = true;
       document.getElementById('ttsButton').textContent = 'Stop Reading';
       this.speakNextInQueue();
+    }
+  }
+
+  speakNextInQueue() {
+    if (!this.speaking || this.speechQueue.length === 0) {
+      this.speaking = false;
+      document.getElementById('ttsButton').textContent = 'Read Aloud';
+      return;
+    }
+
+    const utterance = this.speechQueue.shift();
+    utterance.onend = () => {
+      if (this.speaking) {
+        this.speakNextInQueue();
+      }
+    };
+
+    try {
+      this.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error('Error speaking:', error);
+      this.speaking = false;
+      document.getElementById('ttsButton').textContent = 'Read Aloud';
     }
   }
 
@@ -462,29 +485,6 @@ class StoryManager {
     if (femaleScore > maleScore) return 'female';
     if (maleScore > femaleScore) return 'male';
     return null;
-  }
-
-  speakNextInQueue() {
-    if (!this.speaking || this.speechQueue.length === 0) {
-      this.speaking = false;
-      document.getElementById('ttsButton').textContent = 'Read Aloud';
-      return;
-    }
-
-    const utterance = this.speechQueue.shift();
-    utterance.onend = () => {
-      if (this.speaking) {
-        this.speakNextInQueue();
-      }
-    };
-
-    try {
-      this.speechSynthesis.speak(utterance);
-    } catch (error) {
-      console.error('Error speaking:', error);
-      this.speaking = false;
-      document.getElementById('ttsButton').textContent = 'Read Aloud';
-    }
   }
 
   // ...rest of the class methods...
