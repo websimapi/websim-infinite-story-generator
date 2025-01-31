@@ -224,15 +224,15 @@ class StoryGenerator {
     // Clear previous content
     contentElement.innerHTML = '';
     
-    // Create text content
+    // Generate or retrieve image FIRST
+    const imageElement = await this.generatePageImage(currentContent, this.currentPage);
+    contentElement.appendChild(imageElement);
+    
+    // Create text content SECOND
     const textDiv = document.createElement('div');
     textDiv.className = 'story-text';
     textDiv.innerHTML = currentContent;
     contentElement.appendChild(textDiv);
-    
-    // Generate or retrieve image
-    const imageElement = await this.generatePageImage(currentContent, this.currentPage);
-    contentElement.appendChild(imageElement);
     
     document.getElementById('pageNumber').textContent = `Page ${this.currentPage}`;
     
