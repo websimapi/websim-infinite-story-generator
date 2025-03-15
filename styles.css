@@ -123,8 +123,7 @@ input:focus, select:focus, textarea:focus {
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  margin: 1rem 0;
-  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 .nav-btn:disabled {
@@ -368,35 +367,24 @@ input:focus, select:focus, textarea:focus {
 
 .edit-title-input {
   flex-grow: 1;
-  padding: 5px 10px;
+  padding: 5px;
   font-size: 1.17em;
   font-weight: bold;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  margin-right: 10px;
 }
 
 .save-title-btn {
-  padding: 5px 15px;
+  padding: 5px 10px;
   background-color: var(--secondary-color);
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
 }
 
 .save-title-btn:hover {
   background-color: #2980b9;
-}
-
-#ttsButton {
-  background-color: var(--primary-color);
-  margin-left: 1rem;
-}
-
-#ttsButton:hover {
-  background-color: var(--secondary-color);
 }
 
 @media (max-width: 768px) {

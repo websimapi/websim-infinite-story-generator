@@ -5,10 +5,6 @@ class StoryManager {
     this.stories = new Map();
     this.currentStoryId = null;
     this.storyGenerator = null;
-    this.speaking = false;
-    this.speechSynthesis = window.speechSynthesis;
-    this.speechQueue = [];
-    this.currentSpeaker = null;
     this.loadStories();
     this.setupEventListeners();
     this.showStoryList();
@@ -20,7 +16,6 @@ class StoryManager {
 
   setupEventListeners() {
     document.getElementById('createNewStory').addEventListener('click', () => this.startNewStory());
-    document.getElementById('ttsButton').addEventListener('click', () => this.toggleTTS());
   }
 
   loadStories() {
@@ -71,24 +66,22 @@ class StoryManager {
       const storyCard = document.createElement('div');
       storyCard.className = 'story-card';
       
+      // Create the title section with edit functionality
       const titleSection = document.createElement('div');
       titleSection.className = 'story-title';
-      
-      const renderTitleView = () => {
-        titleSection.innerHTML = `
-          <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
-          <button class="edit-title-btn" aria-label="Edit title">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-            </svg>
-          </button>
-        `;
+      titleSection.innerHTML = `
+        <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
+        <button class="edit-title-btn" title="Edit title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+        </button>
+      `;
 
-        const editButton = titleSection.querySelector('.edit-title-btn');
-        editButton.addEventListener('click', renderTitleEdit);
-      };
+      const titleElement = titleSection.querySelector('h3');
+      const editButton = titleSection.querySelector('.edit-title-btn');
 
-      const renderTitleEdit = () => {
+      editButton.addEventListener('click', () => {
         const currentTitle = story.title || `${story.storyData.storyType} Story`;
         titleSection.innerHTML = `
           <input type="text" class="edit-title-input" value="${currentTitle}">
@@ -104,9 +97,7 @@ class StoryManager {
         const saveTitle = () => {
           const newTitle = input.value.trim();
           if (newTitle) {
-            story.title = newTitle;
-            this.saveStories();
-            renderTitleView();
+            this.editStoryTitle(id, newTitle);
           }
         };
 
@@ -116,9 +107,8 @@ class StoryManager {
             saveTitle();
           }
         });
-      };
+      });
 
-      renderTitleView();
       storyCard.appendChild(titleSection);
       
       // Add the rest of the card content
@@ -362,273 +352,6 @@ class StoryManager {
       pdfIcon.classList.add('disabled');
     }
   }
-
-  async toggleTTS() {
-    if (this.speaking) {
-      this.speechSynthesis.cancel();
-      this.speaking = false;
-      document.getElementById('ttsButton').textContent = 'Read Aloud';
-      this.speechQueue = [];
-      this.currentSpeaker = null;
-    } else {
-      const story = this.stories.get(this.currentStoryId);
-      if (!story) return;
-
-      const currentText = story.storyHistory[story.currentPage - 1];
-      
-      // Split text into segments (dialogue and narrative)
-      const segments = this.splitTextIntoSegments(currentText);
-      
-      // Process each segment
-      this.speechQueue = segments.map(segment => {
-        const utterance = new SpeechSynthesisUtterance(segment.text.trim());
-        
-        // Configure voice based on segment type
-        if (segment.type === 'dialogue') {
-          const dialogueContext = this.getDialogueContext(segment.text, segment.context);
-          const gender = this.determineSpeakerGender(dialogueContext);
-          
-          if (gender) {
-            const voices = this.speechSynthesis.getVoices();
-            const genderVoices = voices.filter(voice => {
-              const voiceName = voice.name.toLowerCase();
-              return gender === 'female' ? 
-                voiceName.includes('female') || voiceName.includes('woman') :
-                voiceName.includes('male') || voiceName.includes('man');
-            });
-            
-            if (genderVoices.length > 0) {
-              utterance.voice = genderVoices[0];
-              if (gender === 'female') {
-                utterance.pitch = 1.2;
-              } else {
-                utterance.pitch = 0.8;
-              }
-            }
-          }
-        } else {
-          // Reset to narrator voice for non-dialogue
-          utterance.pitch = 1.0;
-          const voices = this.speechSynthesis.getVoices();
-          const narratorVoice = voices.find(v => v.name.includes('Google US English'));
-          if (narratorVoice) {
-            utterance.voice = narratorVoice;
-          }
-        }
-        
-        return utterance;
-      });
-
-      // Break text into smaller chunks
-      const minSentenceLength = 50; // Minimum length to consider a sentence complete
-      const sentences = this.speechQueue.reduce((acc, utterance) => {
-        const text = utterance.text;
-        let currentSentence = '';
-        let sentences = [];
-        
-        // Split by common sentence endings while preserving quotes
-        const parts = text.match(/[^.!?]+[.!?]+|[^.!?]+/g) || [text];
-        
-        parts.forEach(part => {
-          currentSentence += part;
-          
-          // Check if we have a complete sentence
-          if (
-            (currentSentence.length >= minSentenceLength && /[.!?]/.test(currentSentence)) ||
-            (/[.!?]"/.test(currentSentence)) // End of quoted speech
-          ) {
-            sentences.push({
-              text: currentSentence.trim(),
-              voice: utterance.voice,
-              pitch: utterance.pitch
-            });
-            currentSentence = '';
-          }
-        });
-        
-        // Add any remaining text
-        if (currentSentence.trim()) {
-          sentences.push({
-            text: currentSentence.trim(),
-            voice: utterance.voice,
-            pitch: utterance.pitch
-          });
-        }
-        
-        return [...acc, ...sentences];
-      }, []);
-      
-      // Create new utterances for each sentence
-      this.speechQueue = sentences.map(sentence => {
-        const utterance = new SpeechSynthesisUtterance(sentence.text);
-        utterance.voice = sentence.voice;
-        utterance.pitch = sentence.pitch;
-        return utterance;
-      });
-
-      this.speaking = true;
-      document.getElementById('ttsButton').textContent = 'Stop Reading';
-      this.speakNextInQueue();
-    }
-  }
-
-  splitTextIntoSegments(text) {
-    const segments = [];
-    let currentIndex = 0;
-    let dialogueRegex = /"[^"]+"/g;
-    let match;
-
-    while ((match = dialogueRegex.exec(text)) !== null) {
-      // Add narrative text before dialogue if exists
-      if (match.index > currentIndex) {
-        segments.push({
-          type: 'narrative',
-          text: text.slice(currentIndex, match.index),
-          context: text
-        });
-      }
-
-      // Add dialogue
-      segments.push({
-        type: 'dialogue',
-        text: match[0],
-        context: {
-          before: text.slice(Math.max(0, match.index - 100), match.index),
-          current: match[0],
-          after: text.slice(match.index + match[0].length, Math.min(text.length, match.index + match[0].length + 100))
-        }
-      });
-
-      currentIndex = match.index + match[0].length;
-    }
-
-    // Add remaining narrative text if exists
-    if (currentIndex < text.length) {
-      segments.push({
-        type: 'narrative',
-        text: text.slice(currentIndex),
-        context: text
-      });
-    }
-
-    return segments;
-  }
-
-  getDialogueContext(dialogueText, context) {
-    return {
-      before: context.before,
-      current: dialogueText,
-      after: context.after
-    };
-  }
-
-  determineSpeakerGender(context) {
-    const genderIndicators = {
-      female: ['she', 'her', 'herself', 'woman', 'girl', 'mother', 'sister', 'daughter', 'aunt', 'lady'],
-      male: ['he', 'him', 'himself', 'man', 'boy', 'father', 'brother', 'son', 'uncle', 'gentleman']
-    };
-
-    // Take special note of words immediately following the quote
-    const afterQuoteContext = context.after.toLowerCase().split(/\W+/);
-    const immediateFollowingWord = afterQuoteContext[0];
-    
-    // If the word immediately following is a gender indicator, give it more weight
-    if (genderIndicators.male.includes(immediateFollowingWord)) {
-      return 'male';
-    }
-    if (genderIndicators.female.includes(immediateFollowingWord)) {
-      return 'female';
-    }
-
-    // Create a context window of words before and after the quote
-    const contextText = (context.before + ' ' + context.current + ' ' + context.after).toLowerCase();
-    const words = contextText.split(/\W+/);
-    
-    let femaleScore = 0;
-    let maleScore = 0;
-
-    // Analyze each word in the context, giving more weight to words closer to the quote
-    words.forEach((word, index) => {
-      const cleanWord = word.toLowerCase().trim();
-      // Give double weight to words immediately following the quote
-      const weight = index === words.indexOf(context.current) + 1 ? 2 : 1;
-      
-      if (genderIndicators.female.includes(cleanWord)) {
-        femaleScore += weight;
-      }
-      if (genderIndicators.male.includes(cleanWord)) {
-        maleScore += weight;
-      }
-    });
-
-    // Check specifically for "he said" or "she said" patterns after the quote
-    const afterText = context.after.toLowerCase();
-    if (afterText.includes('he said') || afterText.includes('he asked') || afterText.includes('he replied')) {
-      maleScore += 3; // Give extra weight to these clear indicators
-    }
-    if (afterText.includes('she said') || afterText.includes('she asked') || afterText.includes('she replied')) {
-      femaleScore += 3; // Give extra weight to these clear indicators
-    }
-
-    // Return gender based on the weighted score
-    if (femaleScore > maleScore) return 'female';
-    if (maleScore > femaleScore) return 'male';
-    return null;
-  }
-
-  speakNextInQueue() {
-    if (!this.speaking || this.speechQueue.length === 0) {
-      this.speaking = false;
-      document.getElementById('ttsButton').textContent = 'Read Aloud';
-      return;
-    }
-
-    const utterance = this.speechQueue.shift();
-    const voices = this.speechSynthesis.getVoices();
-
-    // Try to find specific voices first
-    const maleVoice = voices.find(voice => 
-      voice.name.includes('English') && 
-      (voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('man'))
-    );
-    const femaleVoice = voices.find(voice => 
-      voice.name.includes('English') && 
-      (voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman'))
-    );
-    const narratorVoice = voices.find(v => v.name.includes('Google US English')) || voices[0];
-
-    // Configure voice settings based on the speaker type
-    if (utterance.voice === 'male' && maleVoice) {
-      utterance.voice = maleVoice;
-      utterance.pitch = 0.8; // Deeper voice for males
-      utterance.rate = 0.95;
-    } else if (utterance.voice === 'female' && femaleVoice) {
-      utterance.voice = femaleVoice;
-      utterance.pitch = 1.2; // Higher voice for females
-      utterance.rate = 1.0;
-    } else {
-      // Default narrator voice
-      utterance.voice = narratorVoice;
-      utterance.pitch = 1.0;
-      utterance.rate = 1.0;
-    }
-
-    utterance.onend = () => {
-      if (this.speaking) {
-        this.speakNextInQueue();
-      }
-    };
-
-    try {
-      this.speechSynthesis.speak(utterance);
-    } catch (error) {
-      console.error('Error speaking:', error);
-      this.speaking = false;
-      document.getElementById('ttsButton').textContent = 'Read Aloud';
-    }
-  }
-
-  // ... rest of the class methods ...
 }
 
 class StoryGenerator {
@@ -668,21 +391,33 @@ class StoryGenerator {
       return this.createCachedImageElement(cacheKey);
     }
 
-    const img = document.createElement('img');
-    img.id = `page_${pageId}_image`;
-    img.style.display = 'none';
-    img.alt = pageContent;
-    img.src = pageContent;
+    try {
+      // Generate an image based on the page content
+      const result = await websim.imageGen({
+        prompt: pageContent,
+        aspect_ratio: "16:9"
+      });
 
-    img.addEventListener('load', () => {
-      if (img.src !== pageContent) {
-        this.imageCache.set(cacheKey, img.src);
+      if (result && result.url) {
+        this.imageCache.set(cacheKey, result.url);
         this.saveImageCache();
-        img.style.display = 'block';
+        
+        const img = document.createElement('img');
+        img.id = `page_${pageId}_image`;
+        img.alt = pageContent;
+        img.src = result.url;
+        
+        return img;
       }
-    });
+    } catch (error) {
+      console.error('Error generating image:', error);
+    }
 
-    return img;
+    // Return a placeholder div if image generation fails
+    const placeholder = document.createElement('div');
+    placeholder.className = 'story-page-image';
+    placeholder.textContent = 'Image generation failed';
+    return placeholder;
   }
 
   createCachedImageElement(cacheKey) {
