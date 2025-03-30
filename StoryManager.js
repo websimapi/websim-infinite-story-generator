@@ -5,17 +5,144 @@ export class StoryManager {
   constructor() {
     this.stories = new Map();
     this.currentStoryId = null;
-    this.storyGenerator = null; 
+    this.storyGenerator = null;
     this.loadStories();
-    this.setupEventListeners();
+    this.setupGlobalEventListener();
     this.showStoryList();
-    document.getElementById('homeIcon').addEventListener('click', () => this.showStoryList());
-    document.getElementById('pdfIcon').addEventListener('click', () => this.downloadPDF());
     this.updatePDFButtonState();
   }
 
-  setupEventListeners() {
-    document.getElementById('createNewStory').addEventListener('click', () => this.startNewStory());
+  setupGlobalEventListener() {
+    document.body.addEventListener('click', (event) => {
+      const target = event.target;
+
+      const createNewBtn = target.closest('#createNewStory');
+      if (createNewBtn) {
+        this.startNewStory();
+        return;
+      }
+
+      const continueBtn = target.closest('.continue-btn');
+      if (continueBtn && continueBtn.dataset.id) {
+        event.stopPropagation();
+        this.continueStory(continueBtn.dataset.id);
+        return;
+      }
+
+      const viewDetailsBtn = target.closest('.view-details-btn');
+      if (viewDetailsBtn && viewDetailsBtn.dataset.id) {
+        event.stopPropagation();
+        this.viewStoryDetails(viewDetailsBtn.dataset.id);
+        return;
+      }
+
+      const deleteBtn = target.closest('.delete-btn');
+      if (deleteBtn && deleteBtn.dataset.id) {
+        event.stopPropagation();
+        this.deleteStory(deleteBtn.dataset.id);
+        return;
+      }
+
+      const storyCard = target.closest('.story-card:not(.editing)');
+      if (storyCard && !continueBtn && !viewDetailsBtn && !deleteBtn && !target.closest('.edit-title-btn') && !target.closest('.save-title-btn') && !target.closest('.edit-title-input')) {
+        const id = storyCard.querySelector('.continue-btn')?.dataset.id;
+        if (id) {
+          this.continueStory(id);
+        }
+        return;
+      }
+
+      const editTitleBtn = target.closest('.edit-title-btn');
+      if (editTitleBtn) {
+        event.stopPropagation();
+        const storyCard = editTitleBtn.closest('.story-card');
+        const id = storyCard?.querySelector('[data-id]')?.dataset.id;
+        if (storyCard && id) {
+          this.toggleTitleEdit(storyCard, id, true);
+        }
+        return;
+      }
+
+      const saveTitleBtn = target.closest('.save-title-btn');
+      if (saveTitleBtn) {
+        event.stopPropagation();
+        const storyCard = saveTitleBtn.closest('.story-card');
+        const id = storyCard?.querySelector('[data-id]')?.dataset.id;
+        if (storyCard && id) {
+          this.saveEditedTitle(storyCard, id);
+        }
+        return;
+      }
+
+      const homeIcon = target.closest('#homeIcon');
+      if (homeIcon) {
+        this.showStoryList();
+        return;
+      }
+
+      const pdfIcon = target.closest('#pdfIcon:not(.disabled)');
+      if (pdfIcon) {
+        this.downloadPDF();
+        return;
+      }
+
+      const generateBtn = target.closest('#generateBtn');
+      if (generateBtn) {
+        if (this.storyGenerator) {
+          this.storyGenerator.startGeneratingNewStory();
+        } else {
+          console.error("Story Generator not initialized!");
+          this.storyGenerator = new StoryGenerator(this);
+          this.storyGenerator.startGeneratingNewStory();
+        }
+        return;
+      }
+
+      const prevPageBtn = target.closest('#prevPage');
+      if (prevPageBtn && !prevPageBtn.disabled) {
+        if (this.storyGenerator) this.storyGenerator.navigatePage('prev');
+        return;
+      }
+
+      const nextPageBtn = target.closest('#nextPage');
+      if (nextPageBtn && !nextPageBtn.disabled) {
+        if (this.storyGenerator) this.storyGenerator.navigatePage('next');
+        return;
+      }
+    });
+
+    document.body.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        const input = event.target.closest('.edit-title-input');
+        if (input) {
+          event.preventDefault();
+          event.stopPropagation();
+          const storyCard = input.closest('.story-card');
+          const id = storyCard?.querySelector('[data-id]')?.dataset.id;
+          if (storyCard && id) {
+            this.saveEditedTitle(storyCard, id);
+          }
+        }
+      }
+    });
+
+    document.body.addEventListener('focusout', (event) => {
+      const input = event.relatedTarget?.closest('.edit-title-input') ?? null;
+      const currentInput = event.target.closest('.edit-title-input');
+
+      if (currentInput && !event.relatedTarget?.closest('.story-title')) {
+        const storyCard = currentInput.closest('.story-card');
+        const id = storyCard?.querySelector('[data-id]')?.dataset.id;
+        if (storyCard && id) {
+          const story = this.stories.get(id);
+          if (story) {
+            this.renderSingleStoryCard(story, storyCard);
+          } else {
+            this.renderStoryList();
+          }
+        }
+      }
+    });
   }
 
   loadStories() {
@@ -30,24 +157,6 @@ export class StoryManager {
     } catch (error) {
       console.error('Error loading stories:', error);
     }
-  }
-
-  saveStories() {
-    try {
-      const storiesArray = Array.from(this.stories.values());
-      localStorage.setItem('stories', JSON.stringify(storiesArray));
-    } catch (error) {
-      console.error('Error saving stories:', error);
-    }
-  }
-
-  showStoryList() {
-    document.getElementById('storyList').classList.remove('hidden');
-    document.getElementById('storyForm').classList.add('hidden');
-    document.getElementById('storyContainer').classList.add('hidden');
-    this.currentStoryId = null; 
-    this.updatePDFButtonState(); 
-    this.renderStoryList();
   }
 
   renderStoryList() {
@@ -66,111 +175,102 @@ export class StoryManager {
     const sortedStories = Array.from(this.stories.values()).sort((a, b) => parseInt(b.id) - parseInt(a.id));
 
     sortedStories.forEach((story) => {
-      const id = story.id;
-      const storyCard = document.createElement('div');
-      storyCard.className = 'story-card';
-
-      const titleSection = document.createElement('div');
-      titleSection.className = 'story-title';
-      titleSection.innerHTML = `
-        <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
-        <button class="edit-title-btn" title="Edit title">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-          </svg>
-        </button>
-      `;
-
-      const titleElement = titleSection.querySelector('h3');
-      const editButton = titleSection.querySelector('.edit-title-btn');
-
-      editButton.addEventListener('click', (event) => {
-        event.stopPropagation(); 
-        const currentTitle = story.title || `${story.storyData.storyType} Story`;
-        titleSection.innerHTML = `
-          <input type="text" class="edit-title-input" value="${currentTitle}">
-          <button class="save-title-btn">Save</button>
-        `;
-
-        const input = titleSection.querySelector('.edit-title-input');
-        const saveButton = titleSection.querySelector('.save-title-btn');
-
-        input.focus();
-        input.select();
-
-        const saveTitle = () => {
-          const newTitle = input.value.trim();
-          if (newTitle) {
-            this.editStoryTitle(id, newTitle);
-            titleSection.innerHTML = `
-              <h3>${newTitle}</h3>
-              <button class="edit-title-btn" title="Edit title">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                </svg>
-              </button>
-            `;
-            titleSection.querySelector('.edit-title-btn').addEventListener('click', (e) => {
-              e.stopPropagation();
-              saveButton.click(); 
-            });
-
-          } else {
-            this.renderStoryList(); 
-          }
-        };
-
-        saveButton.addEventListener('click', (e) => {
-          e.stopPropagation();
-          saveTitle();
-        });
-        input.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-            saveTitle();
-          }
-        });
-        input.addEventListener('blur', (e) => {
-          this.renderStoryList(); 
-        });
-      });
-
-      storyCard.appendChild(titleSection);
-
-      storyCard.innerHTML += `
-        <p>Genre: ${story.storyData.storyType} | Tone: ${story.storyData.narrativeTone}</p>
-        <p>Pages: ${story.storyHistory.length}</p>
-        <div class="story-card-actions">
-          <button class="story-card-btn continue-btn" data-id="${id}">Continue</button>
-          <button class="story-card-btn view-details-btn" data-id="${id}">View Details</button>
-          <button class="story-card-btn delete-btn" data-id="${id}">Delete</button>
-        </div>
-      `;
-
-      storyCard.querySelector('.continue-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.continueStory(e.target.dataset.id)
-      });
-      storyCard.querySelector('.view-details-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.viewStoryDetails(e.target.dataset.id)
-      });
-      storyCard.querySelector('.delete-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.deleteStory(e.target.dataset.id)
-      });
-
-      storyCard.addEventListener('click', () => this.continueStory(id));
-
+      const storyCard = this.createStoryCardElement(story);
       savedStoriesEl.appendChild(storyCard);
     });
   }
 
+  createStoryCardElement(story) {
+    const id = story.id;
+    const storyCard = document.createElement('div');
+    storyCard.className = 'story-card';
+    storyCard.dataset.storyId = id;
+
+    storyCard.innerHTML = `
+      <div class="story-title">
+        <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
+        <button class="edit-title-btn" title="Edit title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+        </button>
+      </div>
+      <p>Genre: ${story.storyData.storyType} | Tone: ${story.storyData.narrativeTone}</p>
+      <p>Pages: ${story.storyHistory.length}</p>
+      <div class="story-card-actions">
+        <button class="story-card-btn continue-btn" data-id="${id}">Continue</button>
+        <button class="story-card-btn view-details-btn" data-id="${id}">View Details</button>
+        <button class="story-card-btn delete-btn" data-id="${id}">Delete</button>
+      </div>
+    `;
+    return storyCard;
+  }
+
+  renderSingleStoryCard(story, existingCardElement) {
+    const newCard = this.createStoryCardElement(story);
+    existingCardElement.replaceWith(newCard);
+  }
+
+  toggleTitleEdit(storyCardElement, storyId, startEditing) {
+    const titleSection = storyCardElement.querySelector('.story-title');
+    if (!titleSection) return;
+
+    const story = this.stories.get(storyId);
+    if (!story) return;
+
+    storyCardElement.classList.toggle('editing', startEditing);
+
+    if (startEditing) {
+      const currentTitle = story.title || `${story.storyData.storyType} Story`;
+      titleSection.innerHTML = `
+        <input type="text" class="edit-title-input" value="${currentTitle}" data-original-title="${currentTitle}">
+        <button class="btn btn-secondary save-title-btn">Save</button>
+      `;
+
+      const input = titleSection.querySelector('.edit-title-input');
+      setTimeout(() => {
+        input?.focus();
+        input?.select();
+      }, 0);
+    } else {
+      titleSection.innerHTML = `
+        <h3>${story.title || `${story.storyData.storyType} Story`}</h3>
+        <button class="edit-title-btn" title="Edit title">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+        </button>
+      `;
+    }
+  }
+
+  saveEditedTitle(storyCardElement, storyId) {
+    const input = storyCardElement.querySelector('.edit-title-input');
+    if (!input) return;
+
+    const newTitle = input.value.trim();
+    if (newTitle) {
+      this.editStoryTitle(storyId, newTitle);
+      this.toggleTitleEdit(storyCardElement, storyId, false);
+    } else {
+      const originalTitle = input.dataset.originalTitle || '';
+      this.editStoryTitle(storyId, originalTitle);
+      this.toggleTitleEdit(storyCardElement, storyId, false);
+    }
+  }
+
   startNewStory() {
     this.currentStoryId = null;
-    document.getElementById('storyList').classList.add('hidden');
-    document.getElementById('storyForm').classList.remove('hidden');
-    document.getElementById('storyContainer').classList.add('hidden');
+    const storyList = document.getElementById('storyList');
+    const storyForm = document.getElementById('storyForm');
+    const storyContainer = document.getElementById('storyContainer');
+
+    if (storyList) storyList.classList.add('hidden');
+    if (storyForm) {
+      storyForm.classList.remove('hidden');
+      storyForm.querySelector('form')?.reset();
+    }
+    if (storyContainer) storyContainer.classList.add('hidden');
 
     if (!this.storyGenerator) {
       this.storyGenerator = new StoryGenerator(this);
@@ -189,10 +289,11 @@ export class StoryManager {
       this.storyGenerator = new StoryGenerator(this);
     }
 
-    this.storyGenerator.loadStory(story);
     document.getElementById('storyList').classList.add('hidden');
     document.getElementById('storyForm').classList.add('hidden');
     document.getElementById('storyContainer').classList.remove('hidden');
+
+    this.storyGenerator.loadStory(story);
     this.updatePDFButtonState();
   }
 
@@ -218,7 +319,7 @@ export class StoryManager {
       if (this.storyGenerator) {
         const story = this.stories.get(id);
         if (story) {
-          for(let i = 0; i < story.storyHistory.length; i++) {
+          for (let i = 0; i < story.storyHistory.length; i++) {
             const cacheKey = `${id}_page_${i + 1}`;
             this.storyGenerator.imageCache.delete(cacheKey);
           }
@@ -228,7 +329,15 @@ export class StoryManager {
 
       this.stories.delete(id);
       this.saveStories();
-      this.renderStoryList(); 
+      const cardToRemove = document.querySelector(`.story-card[data-story-id="${id}"]`);
+      if (cardToRemove) {
+        cardToRemove.remove();
+        if (this.stories.size === 0) {
+          this.renderStoryList();
+        }
+      } else {
+        this.renderStoryList();
+      }
 
       if (this.currentStoryId === id) {
         this.showStoryList();
@@ -241,14 +350,14 @@ export class StoryManager {
     const defaultTitle = storyData ? `${storyData.storyType} Story` : 'New Story';
     this.stories.set(id, {
       id,
-      title: title || this.stories.get(id)?.title || defaultTitle, 
+      title: title || this.stories.get(id)?.title || defaultTitle,
       storyData,
       currentPage,
       storyHistory
     });
     this.currentStoryId = id;
     this.saveStories();
-    this.updatePDFButtonState(); 
+    this.updatePDFButtonState();
   }
 
   editStoryTitle(id, newTitle) {
@@ -288,10 +397,10 @@ export class StoryManager {
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15; 
-    const bottomMargin = 25; 
+    const margin = 15;
+    const bottomMargin = 25;
     const textWidth = pageWidth - (2 * margin);
-    const imgMaxHeight = pageHeight / 3; 
+    const imgMaxHeight = pageHeight / 3;
 
     pdf.setFontSize(18);
     pdf.text(story.title || `${story.storyData.storyType} Story`, pageWidth / 2, margin + 10, { align: 'center' });
@@ -303,44 +412,44 @@ export class StoryManager {
       let currentY = margin;
 
       const cacheKey = `${this.currentStoryId}_page_${i + 1}`;
-      const imageUrl = this.storyGenerator?.imageCache.get(cacheKey); 
+      const imageUrl = this.storyGenerator?.imageCache.get(cacheKey);
 
       if (imageUrl) {
         try {
           const imgData = await this.getImageData(imageUrl);
-          if(imgData) {
+          if (imgData) {
             const imgProps = pdf.getImageProperties(imgData);
-            const imgWidth = textWidth; 
+            const imgWidth = textWidth;
             const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-            const finalImgHeight = Math.min(imgHeight, imgMaxHeight); 
+            const finalImgHeight = Math.min(imgHeight, imgMaxHeight);
 
             pdf.addImage(
               imgData,
-              'JPEG', 
+              'JPEG',
               margin,
               currentY,
               imgWidth,
               finalImgHeight
             );
-            currentY += finalImgHeight + 10; 
+            currentY += finalImgHeight + 10;
           }
 
         } catch (error) {
-          console.error(`Error adding image for page ${i+1} to PDF:`, error);
+          console.error(`Error adding image for page ${i + 1} to PDF:`, error);
           pdf.setFontSize(8);
           pdf.setTextColor(150);
           pdf.text('[Image could not be loaded]', margin, currentY);
-          pdf.setTextColor(0); 
-          currentY += 5; 
+          pdf.setTextColor(0);
+          currentY += 5;
         }
       }
 
       const text = story.storyHistory[i] || "[No text generated for this page]";
 
-      let fontSize = 11; 
+      let fontSize = 11;
       let textLines;
       let textHeight;
-      const lineHeightFactor = 1.15; 
+      const lineHeightFactor = 1.15;
 
       const calculateAvailableHeight = () => pageHeight - currentY - bottomMargin;
       let availableHeight = calculateAvailableHeight();
@@ -351,9 +460,9 @@ export class StoryManager {
         textHeight = textLines.length * pdf.getLineHeight() / pdf.internal.scaleFactor * lineHeightFactor;
 
         if (textHeight <= availableHeight) {
-          break; 
+          break;
         }
-        fontSize--; 
+        fontSize--;
       }
 
       if (textHeight > availableHeight) {
@@ -362,13 +471,13 @@ export class StoryManager {
         const remainingLines = textLines.slice(linesPerPage);
 
         pdf.text(currentPageLines, margin, currentY, { lineHeightFactor: lineHeightFactor });
-        currentY += currentPageLines.length * pdf.getLineHeight() / pdf.internal.scaleFactor * lineHeightFactor; 
+        currentY += currentPageLines.length * pdf.getLineHeight() / pdf.internal.scaleFactor * lineHeightFactor;
 
         if (remainingLines.length > 0) {
           console.warn(`Text overflow on page ${i + 1}, adding extra page.`);
           pdf.addPage();
           currentY = margin;
-          pdf.setFontSize(fontSize); 
+          pdf.setFontSize(fontSize);
           pdf.text(remainingLines, margin, currentY, { lineHeightFactor: lineHeightFactor });
         }
       } else {
@@ -376,8 +485,7 @@ export class StoryManager {
       }
 
       pdf.setFontSize(8);
-      pdf.text(`Page ${i + 1}`, pageWidth / 2 , pageHeight - bottomMargin + 10, { align: 'center'});
-
+      pdf.text(`Page ${i + 1}`, pageWidth / 2, pageHeight - bottomMargin + 10, { align: 'center' });
     }
 
     try {
@@ -391,15 +499,15 @@ export class StoryManager {
   async getImageData(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = "Anonymous"; 
+      img.crossOrigin = "Anonymous";
       img.onload = () => {
         try {
           const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth; 
+          canvas.width = img.naturalWidth;
           canvas.height = img.naturalHeight;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.9); 
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
           resolve(dataUrl);
         } catch (e) {
           console.error("Canvas conversion failed:", e);
@@ -425,5 +533,23 @@ export class StoryManager {
       pdfIcon.style.cursor = 'not-allowed';
       pdfIcon.title = "No story content available to download";
     }
+  }
+
+  saveStories() {
+    try {
+      const storiesArray = Array.from(this.stories.values());
+      localStorage.setItem('stories', JSON.stringify(storiesArray));
+    } catch (error) {
+      console.error('Error saving stories:', error);
+    }
+  }
+
+  showStoryList() {
+    document.getElementById('storyList').classList.remove('hidden');
+    document.getElementById('storyForm').classList.add('hidden');
+    document.getElementById('storyContainer').classList.add('hidden');
+    this.currentStoryId = null;
+    this.updatePDFButtonState();
+    this.renderStoryList();
   }
 }

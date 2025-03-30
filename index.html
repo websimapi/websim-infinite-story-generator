@@ -4,16 +4,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Infinite Story Generator</title>
   <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="homeIcon" class="home-icon" title="View Saved Stories">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path d="M12 2L1 12h3v9h7v-6h2v6h7v-9h3L12 2zm0 2.84L20 12v7h-3v-6H7v6H4v-7l8-7.16z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/>
     </svg>
   </div>
 
-  <div id="pdfIcon" class="pdf-icon disabled" title="No story content available to download"> 
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <div id="pdfIcon" class="pdf-icon disabled" title="No story content available to download">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
       <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm12 6V9c0-.55-.45-1-1-1h-2v5h2c.55 0 1-.45 1-1zm-2-3h1v3h-1V9zm4 2h1v-1h-1V9h1V8h-2v5h1v-1zm-8 0h1c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1H9v5h1v-2zm0-2h1v1h-1V9z"/>
     </svg>
   </div>
@@ -25,11 +26,11 @@
     <div id="storyList" class="story-list-container">
       <h2>Your Stories</h2>
       <div id="savedStories" class="saved-stories">
-        <div class="no-stories"> 
+        <div class="no-stories">
           <p>Loading stories...</p>
         </div>
       </div>
-      <button id="createNewStory" class="create-new-btn">Create New Story</button>
+      <button id="createNewStory" class="btn btn-secondary create-new-btn">Create New Story</button>
     </div>
 
     <!-- Story Creation Form Section -->
@@ -129,7 +130,7 @@
           </div>
         </section>
 
-        <!-- Plot Section (Optional but Recommended) -->
+        <!-- Plot Section (Optional) -->
         <section class="form-section">
           <h2>Plot (Optional)</h2>
           <div class="form-group">
@@ -225,7 +226,7 @@
           </div>
         </section>
 
-        <button type="button" id="generateBtn" class="generate-btn">Start Generating Story</button>
+        <button type="button" id="generateBtn" class="btn btn-secondary generate-btn">Start Generating Story</button>
       </form>
     </div>
 
@@ -234,9 +235,9 @@
       <div id="storyContent">
       </div>
       <div class="navigation-buttons">
-        <button id="prevPage" class="nav-btn" disabled>Previous Page</button>
+        <button id="prevPage" class="btn btn-primary nav-btn" disabled>Previous Page</button>
         <span id="pageNumber">Page 1</span>
-        <button id="nextPage" class="nav-btn">Next Page</button>
+        <button id="nextPage" class="btn btn-primary nav-btn">Next Page</button>
       </div>
     </div>
   </div>

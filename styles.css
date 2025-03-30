@@ -52,11 +52,10 @@ h1 {
   display: inline-block; /* Fit content width by default */
 }
 
-.btn:hover {
-  transform: translateY(-1px);
+.btn:hover:not(:disabled) { /* Add :not(:disabled) */
+    transform: translateY(-1px);
 }
-
-.btn:active {
+.btn:active:not(:disabled) { /* Add :not(:disabled) */
    transform: translateY(0px);
 }
 
@@ -64,7 +63,7 @@ h1 {
   background-color: var(--primary-color);
   color: white;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) { /* Add :not(:disabled) */
   background-color: var(--hover-primary);
 }
 
@@ -72,7 +71,7 @@ h1 {
   background-color: var(--secondary-color);
   color: white;
 }
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) { /* Add :not(:disabled) */
   background-color: var(--hover-secondary);
 }
 
@@ -80,7 +79,7 @@ h1 {
   background-color: var(--accent-color);
   color: white;
 }
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) { /* Add :not(:disabled) */
   background-color: #c0392b; /* Darker red */
 }
 
@@ -89,10 +88,18 @@ h1 {
    color: var(--primary-color);
    border: 1px solid var(--border-color);
 }
-.btn-neutral:hover {
+.btn-neutral:hover:not(:disabled) { /* Add :not(:disabled) */
     background-color: #dfe6e9;
 }
 
+.btn:disabled { /* Add generic disabled styles */
+    background-color: var(--disabled-color);
+    color: #7f8c8d; /* Darker gray text on disabled */
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+}
 
 /* Form Styles */
 .form-container, .story-list-container, .story-container {
@@ -163,8 +170,7 @@ textarea {
 }
 /* Apply btn-secondary styles to #generateBtn */
 #generateBtn { background-color: var(--secondary-color); color: white; }
-#generateBtn:hover { background-color: var(--hover-secondary); }
-
+#generateBtn:hover:not(:disabled) { background-color: var(--hover-secondary); }
 
 /* Story List Styles */
 .story-list-container h2 {
@@ -190,8 +196,13 @@ textarea {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
 }
+.story-card.editing { /* Style when editing title */
+    cursor: default; /* Don't show pointer cursor */
+    border-color: var(--secondary-color);
+    box-shadow: 0 3px 10px rgba(52, 152, 219, 0.2);
+}
 
-.story-card:hover {
+.story-card:hover:not(.editing) { /* Add :not(.editing) */
   transform: translateY(-2px);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
 }
@@ -241,7 +252,7 @@ textarea {
 }
 /* Apply btn-secondary styles */
 .save-title-btn { background-color: var(--secondary-color); color: white; }
-.save-title-btn:hover { background-color: var(--hover-secondary); }
+.save-title-btn:hover:not(:disabled) { background-color: var(--hover-secondary); }
 
 .story-card p {
   margin: 0 0 0.8rem 0;
@@ -251,7 +262,6 @@ textarea {
 .story-card p:last-of-type {
     margin-bottom: 0; /* Remove margin from last paragraph before actions */
 }
-
 
 .story-card-actions {
   display: flex;
@@ -268,19 +278,19 @@ textarea {
 }
 /* Specific colors for card buttons */
 .continue-btn { background-color: var(--secondary-color); color: white; }
-.continue-btn:hover { background-color: var(--hover-secondary); }
+.continue-btn:hover:not(:disabled) { background-color: var(--hover-secondary); }
 .view-details-btn { background-color: var(--disabled-color); color: #fff; }
-.view-details-btn:hover { background-color: #95a5a6; }
+.view-details-btn:hover:not(:disabled) { background-color: #95a5a6; }
 .delete-btn { background-color: var(--accent-color); color: white; }
-.delete-btn:hover { background-color: #c0392b; }
+.delete-btn:hover:not(:disabled) { background-color: #c0392b; }
 
 #createNewStory { /* Style the main "Create New" button */
   width: 100%;
+  margin-top: 2rem; /* Add margin */
 }
 /* Apply btn-secondary styles */
 #createNewStory { background-color: var(--secondary-color); color: white; }
-#createNewStory:hover { background-color: var(--hover-secondary); }
-
+#createNewStory:hover:not(:disabled) { background-color: var(--hover-secondary); }
 
 .no-stories {
   text-align: center;
@@ -288,7 +298,6 @@ textarea {
   color: #777;
   font-style: italic;
 }
-
 
 /* Story Display Styles */
 #storyContent {
@@ -352,25 +361,20 @@ textarea {
 }
 
 .nav-btn {
- /* Inherit from .btn */
+ /* Inherit from .btn and .btn-primary applied in HTML */
 }
 /* Apply btn-primary styles to nav buttons */
 .nav-btn { background-color: var(--primary-color); color: white; }
-.nav-btn:hover { background-color: var(--hover-primary); }
+.nav-btn:hover:not(:disabled) { background-color: var(--hover-primary); }
 
 .nav-btn:disabled {
-  background-color: var(--disabled-color);
-  cursor: not-allowed;
-  transform: none; /* No hover effect when disabled */
+  /* Uses the generic .btn:disabled style */
 }
 
 #pageNumber {
   font-weight: 600;
   color: var(--primary-color);
 }
-
-/* Removed #newStory button styling from here, use Home icon */
-
 
 /* Fixed Icons */
 .home-icon, .pdf-icon {
@@ -407,6 +411,7 @@ textarea {
   background-color: var(--disabled-color);
   cursor: not-allowed;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Less shadow when disabled */
+  opacity: 0.7; /* Make it visually disabled */
 }
 
 /* Utility Classes */
