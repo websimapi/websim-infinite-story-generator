@@ -4,36 +4,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Infinite Story Generator</title>
   <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="homeIcon" class="home-icon" title="View Saved Stories">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z"/>
+  <div id="homeIcon" class="home-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M12 2L1 12h3v9h7v-6h2v6h7v-9h3L12 2zm0 2.84L20 12v7h-3v-6H7v6H4v-7l8-7.16z"/>
     </svg>
   </div>
 
-  <div id="pdfIcon" class="pdf-icon disabled" title="No story content available to download">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <div id="pdfIcon" class="pdf-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm12 6V9c0-.55-.45-1-1-1h-2v5h2c.55 0 1-.45 1-1zm-2-3h1v3h-1V9zm4 2h1v-1h-1V9h1V8h-2v5h1v-1zm-8 0h1c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1H9v5h1v-2zm0-2h1v1h-1V9z"/>
     </svg>
   </div>
 
   <div class="container">
     <h1>Infinite Story Generator</h1>
-
+    
     <!-- Story List Section -->
     <div id="storyList" class="story-list-container">
       <h2>Your Stories</h2>
       <div id="savedStories" class="saved-stories">
-        <div class="no-stories">
-          <p>Loading stories...</p>
-        </div>
+        <!-- Stories will be populated here -->
       </div>
-      <button id="createNewStory" class="btn btn-secondary create-new-btn">Create New Story</button>
+      <button id="createNewStory" class="create-new-btn">Create New Story</button>
     </div>
 
-    <!-- Story Creation Form Section -->
     <div id="storyForm" class="form-container hidden">
       <form id="storyFormElement">
         <!-- Genre & Style Section -->
@@ -49,13 +45,9 @@
               <option value="mystery">Mystery</option>
               <option value="horror">Horror</option>
               <option value="adventure">Adventure</option>
-              <option value="historical-fiction">Historical Fiction</option>
-              <option value="slice-of-life">Slice of Life</option>
-              <option value="comedy">Comedy</option>
-              <option value="thriller">Thriller</option>
             </select>
           </div>
-
+          
           <div class="form-group">
             <label for="narrativeTone">Narrative Tone:</label>
             <select id="narrativeTone" required>
@@ -65,9 +57,6 @@
               <option value="dark">Dark</option>
               <option value="lighthearted">Lighthearted</option>
               <option value="whimsical">Whimsical</option>
-              <option value="suspenseful">Suspenseful</option>
-              <option value="uplifting">Uplifting</option>
-              <option value="melancholy">Melancholy</option>
             </select>
           </div>
         </section>
@@ -76,12 +65,12 @@
         <section class="form-section">
           <h2>Structure</h2>
           <div class="form-group">
-            <label for="storyLength">Desired Story Length:</label>
+            <label for="storyLength">Story Length:</label>
             <select id="storyLength" required>
               <option value="">Select length...</option>
-              <option value="short">Short Story (few pages)</option>
-              <option value="novella">Novella (medium length)</option>
-              <option value="novel">Novel (many pages)</option>
+              <option value="short">Short Story</option>
+              <option value="novella">Novella</option>
+              <option value="novel">Novel</option>
             </select>
           </div>
 
@@ -89,9 +78,8 @@
             <label for="pov">Point of View:</label>
             <select id="pov" required>
               <option value="">Select POV...</option>
-              <option value="first">First Person (I, me)</option>
-              <option value="third-limited">Third Person Limited (he/she/they, follows one character)</option>
-              <option value="third-omniscient">Third Person Omniscient (he/she/they, knows all)</option>
+              <option value="first">First Person</option>
+              <option value="third">Third Person</option>
             </select>
           </div>
 
@@ -99,82 +87,81 @@
             <label for="structure">Narrative Structure:</label>
             <select id="structure" required>
               <option value="">Select structure...</option>
-              <option value="linear">Linear (chronological)</option>
-              <option value="nonlinear">Non-linear (flashbacks, etc.)</option>
-              <option value="episodic">Episodic (loosely connected events)</option>
+              <option value="linear">Linear</option>
+              <option value="nonlinear">Non-linear</option>
             </select>
           </div>
         </section>
 
-        <!-- Characters Section (Optional but Recommended) -->
+        <!-- Characters Section -->
         <section class="form-section">
-          <h2>Characters (Optional)</h2>
+          <h2>Characters</h2>
           <div class="form-group">
-            <label for="mainCharacter">Main Character:</label>
-            <textarea id="mainCharacter" rows="3" placeholder="e.g., A cynical detective haunted by his past; A young wizard discovering her powers"></textarea>
+            <label for="mainCharacter">Main Character Description:</label>
+            <textarea id="mainCharacter" rows="3" placeholder="Describe your main character..."></textarea>
           </div>
 
           <div class="form-group">
-            <label for="motivation">Motivations:</label>
-            <textarea id="motivation" rows="3" placeholder="e.g., Seeking revenge; Trying to save their kingdom; Finding true love"></textarea>
+            <label for="motivation">Character Motivations:</label>
+            <textarea id="motivation" rows="3" placeholder="What drives your character?"></textarea>
           </div>
 
           <div class="form-group">
-            <label for="relationships">Relationships:</label>
-            <textarea id="relationships" rows="3" placeholder="e.g., Mentor figure, estranged sibling, loyal companion"></textarea>
+            <label for="relationships">Interpersonal Relationships:</label>
+            <textarea id="relationships" rows="3" placeholder="Describe key relationships..."></textarea>
           </div>
 
           <div class="form-group">
-            <label for="backstory">Backstory Snippets:</label>
-            <textarea id="backstory" rows="3" placeholder="e.g., Witnessed a tragedy; Grew up in poverty; Has a secret identity"></textarea>
+            <label for="backstory">Character Backstories:</label>
+            <textarea id="backstory" rows="3" placeholder="Important background information..."></textarea>
           </div>
         </section>
 
-        <!-- Plot Section (Optional) -->
+        <!-- Plot Section -->
         <section class="form-section">
-          <h2>Plot (Optional)</h2>
+          <h2>Plot</h2>
           <div class="form-group">
-            <label for="initialScenario">Initial Scenario:</label>
-            <textarea id="initialScenario" rows="3" placeholder="e.g., A mysterious object is discovered; A prophecy is revealed; An unexpected journey begins"></textarea>
+            <label for="initialScenario">Initial Scenario/Conflict:</label>
+            <textarea id="initialScenario" rows="3" placeholder="What starts the story?"></textarea>
           </div>
 
           <div class="form-group">
-            <label for="plotPoints">Key Plot Points/Goals:</label>
-            <textarea id="plotPoints" rows="3" placeholder="e.g., Reach the forbidden temple; Unmask the villain; Overcome a major obstacle"></textarea>
+            <label for="plotPoints">Major Plot Points:</label>
+            <textarea id="plotPoints" rows="3" placeholder="Key events in the story..."></textarea>
           </div>
 
           <div class="form-group">
             <label for="themes">Desired Themes:</label>
-            <textarea id="themes" rows="3" placeholder="e.g., Redemption, betrayal, courage, loss, hope"></textarea>
+            <textarea id="themes" rows="3" placeholder="Main themes to explore..."></textarea>
           </div>
 
           <div class="form-group">
             <label for="plotTwists">Potential Plot Twists:</label>
-            <textarea id="plotTwists" rows="3" placeholder="e.g., The mentor is the villain; The quest was a diversion; The hero has a hidden power"></textarea>
+            <textarea id="plotTwists" rows="3" placeholder="Surprising turns in the story..."></textarea>
           </div>
         </section>
 
-        <!-- Setting Section (Optional but Recommended) -->
+        <!-- Setting Section -->
         <section class="form-section">
-          <h2>Setting (Optional)</h2>
+          <h2>Setting</h2>
           <div class="form-group">
             <label for="timePeriod">Time Period:</label>
-            <input type="text" id="timePeriod" placeholder="e.g., Futuristic cyberpunk city; Medieval fantasy kingdom; Present-day small town">
+            <input type="text" id="timePeriod" placeholder="When does the story take place?">
           </div>
 
           <div class="form-group">
-            <label for="location">Location:</label>
-            <input type="text" id="location" placeholder="e.g., Aboard a starship; In an enchanted forest; On a remote island">
+            <label for="location">Geographic Location:</label>
+            <input type="text" id="location" placeholder="Where does the story take place?">
           </div>
 
           <div class="form-group">
-            <label for="worldBuilding">World-building Details:</label>
-            <textarea id="worldBuilding" rows="3" placeholder="e.g., Unique magic system; Advanced technology; Political factions"></textarea>
+            <label for="worldBuilding">World-building Specifics:</label>
+            <textarea id="worldBuilding" rows="3" placeholder="Details about the story's world..."></textarea>
           </div>
 
           <div class="form-group">
             <label for="culturalContext">Cultural/Environmental Context:</label>
-            <textarea id="culturalContext" rows="3" placeholder="e.g., Strict societal norms; Post-apocalyptic environment; Rich local traditions"></textarea>
+            <textarea id="culturalContext" rows="3" placeholder="Social and environmental factors..."></textarea>
           </div>
         </section>
 
@@ -182,17 +169,17 @@
         <section class="form-section">
           <h2>Constraints</h2>
           <div class="form-group">
-            <label for="plotRequirements">Specific Requirements:</label>
-            <textarea id="plotRequirements" rows="3" placeholder="e.g., Must include a dragon; Must end happily; Character X must survive"></textarea>
+            <label for="plotRequirements">Specific Plot Requirements:</label>
+            <textarea id="plotRequirements" rows="3" placeholder="Must-have elements..."></textarea>
           </div>
 
           <div class="form-group">
-            <label for="forbiddenContent">Content to Avoid:</label>
-            <textarea id="forbiddenContent" rows="3" placeholder="e.g., No excessive gore; Avoid clichés; No romantic subplots"></textarea>
+            <label for="forbiddenContent">Forbidden Content:</label>
+            <textarea id="forbiddenContent" rows="3" placeholder="Elements to avoid..."></textarea>
           </div>
 
           <div class="form-group">
-            <label for="targetAge">Target Audience:</label>
+            <label for="targetAge">Target Audience Age Range:</label>
             <select id="targetAge" required>
               <option value="">Select age range...</option>
               <option value="children">Children (5-12)</option>
@@ -202,49 +189,46 @@
           </div>
         </section>
 
-        <!-- Creative Sparks Section (Optional) -->
+        <!-- Creative Sparks Section -->
         <section class="form-section">
           <h2>Creative Sparks (Optional)</h2>
           <div class="form-group">
-            <label for="narrativeSeeds">Narrative Seeds:</label>
-            <textarea id="narrativeSeeds" rows="3" placeholder="e.g., A clock that counts down to an unknown event; A map with a missing piece; A recurring dream"></textarea>
+            <label for="narrativeSeeds">Specific Narrative Seeds:</label>
+            <textarea id="narrativeSeeds" rows="3" placeholder="Interesting story elements..."></textarea>
           </div>
 
           <div class="form-group">
-            <label for="uniquePremise">Unique Premise:</label>
-            <textarea id="uniquePremise" rows="3" placeholder="e.g., What if gravity reversed?; A world where emotions manifest physically"></textarea>
+            <label for="uniquePremise">Unique Story Premise:</label>
+            <textarea id="uniquePremise" rows="3" placeholder="What makes this story special?"></textarea>
           </div>
 
           <div class="form-group">
             <label for="emotionalCore">Emotional Core:</label>
-            <textarea id="emotionalCore" rows="3" placeholder="e.g., The struggle of forgiving oneself; The bond between siblings; Learning to trust again"></textarea>
+            <textarea id="emotionalCore" rows="3" placeholder="Central emotional themes..."></textarea>
           </div>
 
           <div class="form-group">
-            <label for="centralMetaphor">Central Metaphor:</label>
-            <textarea id="centralMetaphor" rows="3" placeholder="e.g., The journey as a metaphor for grief; The monster represents inner demons"></textarea>
+            <label for="centralMetaphor">Central Metaphorical Concept:</label>
+            <textarea id="centralMetaphor" rows="3" placeholder="Overarching metaphor or symbolism..."></textarea>
           </div>
         </section>
 
-        <button type="button" id="generateBtn" class="btn btn-secondary generate-btn">Start Generating Story</button>
+        <button type="button" id="generateBtn" class="generate-btn">Generate Story</button>
       </form>
     </div>
 
-    <!-- Story Display Section -->
     <div id="storyContainer" class="story-container hidden">
-      <div id="storyContent">
-      </div>
+      <div id="storyContent"></div>
       <div class="navigation-buttons">
-        <button id="prevPage" class="btn btn-primary nav-btn" disabled>Previous Page</button>
+        <button id="prevPage" class="nav-btn" disabled>Previous Page</button>
         <span id="pageNumber">Page 1</span>
-        <button id="nextPage" class="btn btn-primary nav-btn">Next Page</button>
+        <button id="nextPage" class="nav-btn">Next Page</button>
       </div>
+      <button id="newStory" class="new-story-btn">Create New Story</button>
     </div>
   </div>
-
-  <!-- Load jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/polyfills.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Load main application script as module -->
   <script type="module" src="script.js"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>

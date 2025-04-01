@@ -1,14 +1,10 @@
 :root {
-  --primary-color: #2c3e50; /* Dark Blue-Gray */
-  --secondary-color: #3498db; /* Bright Blue */
-  --accent-color: #e74c3c; /* Red for delete/error */
-  --background-color: #f4f7f6; /* Lighter Gray */
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --background-color: #f5f6fa;
   --form-background: #ffffff;
-  --text-color: #333333; /* Darker text for better contrast */
-  --border-color: #dfe6e9; /* Lighter border */
-  --hover-primary: #34495e; /* Slightly darker blue-gray */
-  --hover-secondary: #2980b9; /* Slightly darker blue */
-  --disabled-color: #bdc3c7; /* Gray for disabled elements */
+  --text-color: #2c3e50;
+  --border-color: #dcdde1;
 }
 
 * {
@@ -18,196 +14,329 @@
 }
 
 body {
-  font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font stack */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   background-color: var(--background-color);
   color: var(--text-color);
-  font-size: 16px; /* Base font size */
 }
 
 .container {
-  max-width: 900px; /* Slightly narrower for better readability */
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  padding-top: 80px; /* Increased top padding to account for fixed icons */
+  padding-top: 4rem;
 }
 
 h1 {
   text-align: center;
   color: var(--primary-color);
-  margin-bottom: 2.5rem;
-  font-weight: 500;
-}
-
-/* Shared Button Styles */
-.btn {
-  padding: 0.8rem 1.5rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-  text-align: center;
-  display: inline-block; /* Fit content width by default */
-}
-
-.btn:hover:not(:disabled) { /* Add :not(:disabled) */
-    transform: translateY(-1px);
-}
-.btn:active:not(:disabled) { /* Add :not(:disabled) */
-   transform: translateY(0px);
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
-  color: white;
-}
-.btn-primary:hover:not(:disabled) { /* Add :not(:disabled) */
-  background-color: var(--hover-primary);
-}
-
-.btn-secondary {
-  background-color: var(--secondary-color);
-  color: white;
-}
-.btn-secondary:hover:not(:disabled) { /* Add :not(:disabled) */
-  background-color: var(--hover-secondary);
-}
-
-.btn-danger {
-  background-color: var(--accent-color);
-  color: white;
-}
-.btn-danger:hover:not(:disabled) { /* Add :not(:disabled) */
-  background-color: #c0392b; /* Darker red */
-}
-
-.btn-neutral {
-   background-color: #ecf0f1; /* Light gray */
-   color: var(--primary-color);
-   border: 1px solid var(--border-color);
-}
-.btn-neutral:hover:not(:disabled) { /* Add :not(:disabled) */
-    background-color: #dfe6e9;
-}
-
-.btn:disabled { /* Add generic disabled styles */
-    background-color: var(--disabled-color);
-    color: #7f8c8d; /* Darker gray text on disabled */
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.7;
-}
-
-/* Form Styles */
-.form-container, .story-list-container, .story-container {
-  background-color: var(--form-background);
-  border-radius: 8px;
-  padding: 2.5rem; /* More padding */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
   margin-bottom: 2rem;
+}
+
+.form-container {
+  background-color: var(--form-background);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
 .form-section {
   margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  padding-bottom: 2rem;
   border-bottom: 1px solid var(--border-color);
 }
+
 .form-section:last-child {
   border-bottom: none;
-  margin-bottom: 0; /* Remove bottom margin on last section before button */
 }
 
-.form-section h2 {
+h2 {
   color: var(--primary-color);
-  margin-bottom: 1.5rem;
-  font-size: 1.4rem;
-  font-weight: 500;
-  border-left: 4px solid var(--secondary-color);
-  padding-left: 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
 }
 
 .form-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: #555;
+  font-weight: 600;
 }
 
-input[type="text"], select, textarea {
+input, select, textarea {
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 0.8rem;
   border: 1px solid var(--border-color);
   border-radius: 5px;
   font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-  background-color: #fdfdfd;
+  transition: border-color 0.3s ease;
 }
 
-input[type="text"]:focus, select:focus, textarea:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--secondary-color);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); /* Subtle focus ring */
 }
 
-textarea {
-  min-height: 80px; /* Minimum height for textareas */
-  resize: vertical; /* Allow vertical resizing */
+.generate-btn, .nav-btn, .new-story-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
 }
 
-#generateBtn { /* Specific style for the main generate button */
+.generate-btn {
   width: 100%;
   margin-top: 2rem;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
 }
-/* Apply btn-secondary styles to #generateBtn */
-#generateBtn { background-color: var(--secondary-color); color: white; }
-#generateBtn:hover:not(:disabled) { background-color: var(--hover-secondary); }
 
-/* Story List Styles */
-.story-list-container h2 {
-  text-align: center;
-  color: var(--primary-color);
+.generate-btn:hover, .nav-btn:hover, .new-story-btn:hover {
+  background-color: #2980b9;
+}
+
+.story-container {
+  background-color: var(--form-background);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-top: 2rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.story-container.hidden {
+  display: none;
+}
+
+#storyContent {
   margin-bottom: 2rem;
-  font-weight: 500;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.nav-btn:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+#pageNumber {
+  font-weight: 600;
+}
+
+.new-story-btn {
+  width: 100%;
+  background-color: var(--primary-color);
+}
+
+.new-story-btn:hover {
+  background-color: #234567;
+}
+
+.story-list-container {
+  background-color: var(--form-background);
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
 }
 
 .saved-stories {
   margin-bottom: 2rem;
-  max-height: 50vh; /* Limit height and make scrollable if needed */
-  overflow-y: auto;
-  padding-right: 10px; /* Space for scrollbar */
 }
 
 .story-card {
   border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 1.2rem;
+  border-radius: 5px;
+  padding: 1rem;
   margin-bottom: 1rem;
-  background-color: #f9fafb; /* Slightly off-white background */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: #f8f9fa;
+  transition: transform 0.2s ease;
+}
+
+.story-card:hover {
+  transform: translateX(5px);
   cursor: pointer;
 }
-.story-card.editing { /* Style when editing title */
-    cursor: default; /* Don't show pointer cursor */
-    border-color: var(--secondary-color);
-    box-shadow: 0 3px 10px rgba(52, 152, 219, 0.2);
+
+.story-card h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--primary-color);
 }
 
-.story-card:hover:not(.editing) { /* Add :not(.editing) */
-  transform: translateY(-2px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+.story-card p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
 }
 
-.story-title { /* For containing h3 and edit button */
+.story-card-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.story-card-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.continue-btn {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.continue-btn:hover {
+  background-color: #2980b9;
+}
+
+.view-details-btn {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.view-details-btn:hover {
+  background-color: #7f8c8d;
+}
+
+.create-new-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+
+.create-new-btn:hover {
+  background-color: #2980b9;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.no-stories {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.hidden {
+  display: none;
+}
+
+.home-icon {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  cursor: pointer;
+  background: var(--primary-color);
+  padding: 10px;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.home-icon:hover {
+  transform: scale(1.1);
+  background-color: var(--secondary-color);
+}
+
+.home-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.pdf-icon {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  cursor: pointer;
+  background: var(--primary-color);
+  padding: 10px;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.pdf-icon:hover {
+  transform: scale(1.1);
+  background-color: var(--secondary-color);
+}
+
+.pdf-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.pdf-icon.disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.story-page-image {
+  width: 100%;
+  height: 400px;
+  margin: 0 0 20px 0;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#storyContent img {
+  width: 100%;
+  height: 400px;
+  margin: 0 0 20px 0;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.story-text {
+  margin-top: 20px;
+}
+
+.story-title {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -216,13 +345,7 @@ textarea {
 
 .story-title h3 {
   margin: 0;
-  color: var(--primary-color);
-  font-size: 1.15rem;
-  font-weight: 500;
-  flex-grow: 1; /* Title takes available space */
-  overflow: hidden; /* Prevent long titles breaking layout */
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex-grow: 1;
 }
 
 .edit-title-btn {
@@ -230,244 +353,54 @@ textarea {
   border: none;
   cursor: pointer;
   padding: 5px;
-  flex-shrink: 0; /* Prevent button from shrinking */
 }
-.edit-title-btn svg { width: 18px; height: 18px; fill: var(--primary-color); transition: fill 0.2s ease;}
-.edit-title-btn:hover svg { fill: var(--secondary-color); }
+
+.edit-title-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--primary-color);
+}
+
+.edit-title-btn:hover svg {
+  fill: var(--secondary-color);
+}
 
 .edit-title-input {
   flex-grow: 1;
-  padding: 6px 8px;
-  font-size: 1.15rem; /* Match h3 */
-  font-weight: 500; /* Match h3 */
-  border: 1px solid var(--secondary-color); /* Highlight editing */
+  padding: 5px;
+  font-size: 1.17em;
+  font-weight: bold;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  margin-right: 5px; /* Space before save button */
 }
 
 .save-title-btn {
-  /* Use shared button styles */
-   padding: 6px 12px;
-   font-size: 0.9rem;
-}
-/* Apply btn-secondary styles */
-.save-title-btn { background-color: var(--secondary-color); color: white; }
-.save-title-btn:hover:not(:disabled) { background-color: var(--hover-secondary); }
-
-.story-card p {
-  margin: 0 0 0.8rem 0;
-  color: #666;
-  font-size: 0.9rem;
-}
-.story-card p:last-of-type {
-    margin-bottom: 0; /* Remove margin from last paragraph before actions */
-}
-
-.story-card-actions {
-  display: flex;
-  gap: 0.8rem;
-  margin-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  padding-top: 1rem;
-}
-
-.story-card-btn {
-  /* Use shared button styles */
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-}
-/* Specific colors for card buttons */
-.continue-btn { background-color: var(--secondary-color); color: white; }
-.continue-btn:hover:not(:disabled) { background-color: var(--hover-secondary); }
-.view-details-btn { background-color: var(--disabled-color); color: #fff; }
-.view-details-btn:hover:not(:disabled) { background-color: #95a5a6; }
-.delete-btn { background-color: var(--accent-color); color: white; }
-.delete-btn:hover:not(:disabled) { background-color: #c0392b; }
-
-#createNewStory { /* Style the main "Create New" button */
-  width: 100%;
-  margin-top: 2rem; /* Add margin */
-}
-/* Apply btn-secondary styles */
-#createNewStory { background-color: var(--secondary-color); color: white; }
-#createNewStory:hover:not(:disabled) { background-color: var(--hover-secondary); }
-
-.no-stories {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #777;
-  font-style: italic;
-}
-
-/* Story Display Styles */
-#storyContent {
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-  line-height: 1.7; /* Slightly increased line height for readability */
-}
-
-/* Styles for the generated image */
-.story-page-image {
-    display: block; /* Ensure it's block for margin auto */
-    width: 100%;
-    max-height: 450px; /* Max height constraint */
-    margin: 0 auto 1.5rem auto; /* Center horizontally, add bottom margin */
-    object-fit: contain; /* Scale down large images, keep aspect ratio */
-    border-radius: 8px;
-    background-color: #eee; /* Placeholder background */
-    background-size: cover; /* If using background-image */
-    background-position: center;
-    background-repeat: no-repeat;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center; /* Center potential text content */
-    font-size: 0.9rem;
-    color: #888;
-    min-height: 100px; /* Ensure it has some height even when loading/failed */
-    display: flex; /* For centering text vertically */
-    align-items: center;
-    justify-content: center;
-}
-
-.story-page-image.loading,
-.story-page-image.error {
-    height: 200px; /* Give loading/error states a fixed height */
-    background-color: #f0f0f0;
-}
-
-.story-text {
-  margin-top: 1.5rem;
-  white-space: pre-wrap; /* Preserve line breaks from AI */
-}
-
-.loading-text, .error-text {
-    text-align: center;
-    padding: 3rem 1rem;
-    font-style: italic;
-    color: #888;
-}
-.error-text {
-    color: var(--accent-color);
-    font-weight: 500;
-}
-
-.navigation-buttons {
-  display: flex;
-  justify-content: space-between; /* Space out buttons */
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem; /* Space before New Story button */
-  border-top: 1px solid var(--border-color);
-  padding-top: 1.5rem;
-}
-
-.nav-btn {
- /* Inherit from .btn and .btn-primary applied in HTML */
-}
-/* Apply btn-primary styles to nav buttons */
-.nav-btn { background-color: var(--primary-color); color: white; }
-.nav-btn:hover:not(:disabled) { background-color: var(--hover-primary); }
-
-.nav-btn:disabled {
-  /* Uses the generic .btn:disabled style */
-}
-
-#pageNumber {
-  font-weight: 600;
-  color: var(--primary-color);
-}
-
-/* Fixed Icons */
-.home-icon, .pdf-icon {
-  position: fixed;
-  top: 15px;
-  z-index: 1000;
-  cursor: pointer;
-  background: var(--primary-color);
-  padding: 10px;
-  border-radius: 50%;
-  width: 48px; /* Slightly larger */
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, background-color 0.2s ease;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-}
-.home-icon { left: 15px; }
-.pdf-icon { right: 15px; }
-
-.home-icon:hover, .pdf-icon:hover:not(.disabled) { /* Only hover effect if not disabled */
-  transform: scale(1.1);
+  padding: 5px 10px;
   background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
-.home-icon svg, .pdf-icon svg {
-  width: 24px;
-  height: 24px;
-  fill: white;
+.save-title-btn:hover {
+  background-color: #2980b9;
 }
 
-.pdf-icon.disabled {
-  background-color: var(--disabled-color);
-  cursor: not-allowed;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Less shadow when disabled */
-  opacity: 0.7; /* Make it visually disabled */
-}
-
-/* Utility Classes */
-.hidden {
-  display: none !important; /* Use !important to override potential conflicts */
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
-    padding-top: 70px; /* Adjust for icons */
   }
-
-  .form-container, .story-list-container, .story-container {
-    padding: 1.5rem;
+  
+  .form-container, .story-container, .story-list-container {
+    padding: 1rem;
   }
-
-  .form-section h2 {
-    font-size: 1.3rem;
-  }
-
+  
   .navigation-buttons {
-    flex-direction: column; /* Stack nav buttons */
-    align-items: stretch; /* Make buttons full width */
+    flex-direction: column;
   }
-
+  
   .nav-btn {
     width: 100%;
   }
-
-   #pageNumber {
-        margin: 0.5rem 0; /* Add space when stacked */
-   }
-
-  .home-icon, .pdf-icon {
-      width: 42px;
-      height: 42px;
-      top: 10px;
-  }
-   .home-icon { left: 10px; }
-   .pdf-icon { right: 10px; }
-   .home-icon svg, .pdf-icon svg { width: 20px; height: 20px; }
-
-}
-
-@media (max-width: 480px) {
-    body { font-size: 15px; }
-    h1 { font-size: 1.8rem; margin-bottom: 1.5rem;}
-    .form-container, .story-list-container, .story-container { padding: 1rem; }
-    .form-section h2 { font-size: 1.2rem; }
-    .btn { padding: 0.7rem 1.2rem; font-size: 0.95rem;}
-    #generateBtn { padding: 0.9rem 1.5rem; font-size: 1rem; }
-    .story-card { padding: 1rem; }
-    .story-title h3 { font-size: 1.1rem; }
-    .edit-title-btn svg { width: 16px; height: 16px; }
-    .story-card-actions { flex-wrap: wrap; } /* Allow actions to wrap */
-    .story-card-btn { flex-grow: 1; text-align: center; } /* Make buttons take space */
 }
